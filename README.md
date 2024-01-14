@@ -11,3 +11,4 @@ Playing around with windows in Rust.
 * https://www.youtube.com/watch?v=8Uk9ROLGHVE
 * https://www.youtube.com/watch?v=U0k9YL3Zq5A
 * https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-1/
+* https://github.com/TimMisiak/dbgrs
