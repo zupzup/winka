@@ -11,12 +11,14 @@
 * https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-1/
 * https://github.com/TimMisiak/dbgrs
 
+## Alacritty notes
+
+* TBD 
+
 ## TODO
 
-* Create an empty window
 * Make it so window/app can be closed using a hotkey `q`
 * Print mouseclick coordinates when they happen
-* Draw a triangle in the window
 * Detect if you click in the triangle
 * Change the color of the triangle on click
 * Draw an x button at the top right
