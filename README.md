@@ -17,7 +17,6 @@
 
 ## TODO
 
-* Make it so window/app can be closed using a hotkey `q`
 * Print mouseclick coordinates when they happen
 * Detect if you click in the triangle
 * Change the color of the triangle on click

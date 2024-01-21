@@ -1,9 +1,10 @@
 use std::error::Error;
 use std::num::NonZeroU32;
 
-use winit::event::{Event, KeyEvent, WindowEvent};
+use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoopBuilder;
 use winit::keyboard::{Key, NamedKey};
+use winit::platform::modifier_supplement::KeyEventExtModifierSupplement;
 use winit::window::WindowBuilder;
 
 use raw_window_handle::HasRawWindowHandle;
@@ -120,15 +121,13 @@ pub fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
                 }
-                WindowEvent::CloseRequested
-                | WindowEvent::KeyboardInput {
-                    event:
-                        KeyEvent {
-                            logical_key: Key::Named(NamedKey::Escape),
-                            ..
-                        },
-                    ..
-                } => window_target.exit(),
+                WindowEvent::CloseRequested => window_target.exit(),
+                WindowEvent::KeyboardInput { event, .. } => {
+                    match event.key_without_modifiers().as_ref() {
+                        Key::Character("q") | Key::Named(NamedKey::Escape) => window_target.exit(),
+                        _ => (),
+                    }
+                }
                 _ => (),
             },
             Event::AboutToWait => {
