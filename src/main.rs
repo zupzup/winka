@@ -40,21 +40,30 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         .await
         .expect("can create a new device");
 
+    let size = window.inner_size();
+
+    let mut config = surface
+        .get_default_config(&adapter, size.width, size.height)
+        .unwrap();
+    surface.configure(&device, &config);
+
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
 
-    let _ = event_loop.run(move |event, elwt| match event {
-        Event::WindowEvent {
-            event: WindowEvent::CloseRequested,
-            ..
-        } => elwt.exit(),
-        Event::WindowEvent {
-            event: WindowEvent::KeyboardInput { event, .. },
-            ..
-        } => match event.key_without_modifiers().as_ref() {
-            Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
+    event_loop
+        .run(move |event, elwt| match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => elwt.exit(),
+            Event::WindowEvent {
+                event: WindowEvent::KeyboardInput { event, .. },
+                ..
+            } => match event.key_without_modifiers().as_ref() {
+                Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
+                _ => (),
+            },
             _ => (),
-        },
-        _ => (),
-    });
+        })
+        .expect("event loop runs");
 }
