@@ -18,6 +18,7 @@
 * https://sotrh.github.io/learn-wgpu/beginner/tutorial1-window/#boring-i-know
 * `https://www.youtube.com/playlist?list=PLWtPciJ1UMuBs_3G-jFrMJnM5ZMKgl37H` - videos
 * example: `https://github.com/gfx-rs/wgpu/blob/trunk/examples/src/hello_triangle/mod.rs`
+* https://github.com/raphamorim/rio
 
 ## TODO
 
