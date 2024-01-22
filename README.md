@@ -11,9 +11,13 @@
 * https://www.timdbg.com/posts/writing-a-debugger-from-scratch-part-1/
 * https://github.com/TimMisiak/dbgrs
 
-## Alacritty notes
+## WGPU 
 
-* TBD 
+* https://github.com/linebender/vello
+* https://github.com/grovesNL/glyphon (text rendering)
+* https://sotrh.github.io/learn-wgpu/beginner/tutorial1-window/#boring-i-know
+* `https://www.youtube.com/playlist?list=PLWtPciJ1UMuBs_3G-jFrMJnM5ZMKgl37H` - videos
+* example: `https://github.com/gfx-rs/wgpu/blob/trunk/examples/src/hello_triangle/mod.rs`
 
 ## TODO
 
