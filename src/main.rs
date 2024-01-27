@@ -50,61 +50,68 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
 
+    let window = &window;
     event_loop
         .run(move |event, elwt| {
-            if let Event::WindowEvent {
-                window_id: _,
-                event,
-            } = event
-            {
-                match event {
-                    WindowEvent::CloseRequested => elwt.exit(),
-                    WindowEvent::KeyboardInput { event, .. } => {
-                        match event.key_without_modifiers().as_ref() {
-                            Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
-                            _ => (),
+            match event {
+                Event::WindowEvent {
+                    window_id: _,
+                    event,
+                } => {
+                    match event {
+                        WindowEvent::CloseRequested => elwt.exit(),
+                        WindowEvent::KeyboardInput { event, .. } => {
+                            match event.key_without_modifiers().as_ref() {
+                                Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
+                                _ => (),
+                            }
                         }
-                    }
-                    WindowEvent::RedrawRequested => {
-                        let output = surface.get_current_texture().expect("can get texture");
-                        let view = output
-                            .texture
-                            .create_view(&wgpu::TextureViewDescriptor::default());
-                        let mut encoder =
-                            device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                                label: None,
-                            });
-                        {
-                            let _render_pass =
-                                encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                        WindowEvent::RedrawRequested => {
+                            let output = surface.get_current_texture().expect("can get texture");
+                            let view = output
+                                .texture
+                                .create_view(&wgpu::TextureViewDescriptor::default());
+                            let mut encoder =
+                                device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
                                     label: None,
-                                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                                        view: &view,
-                                        resolve_target: None,
-                                        ops: wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(wgpu::Color {
-                                                r: 0.1,
-                                                g: 0.9,
-                                                b: 0.3,
-                                                a: 1.0,
-                                            }),
-                                            store: wgpu::StoreOp::Store,
-                                        },
-                                    })],
-                                    depth_stencil_attachment: None,
-                                    timestamp_writes: None,
-                                    occlusion_query_set: None,
                                 });
-                            //     render_pass.set_pipeline(&render_pipeline);
-                            //     render_pass.draw(0..3, 0..1);
+                            {
+                                let _render_pass =
+                                    encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                                        label: None,
+                                        color_attachments: &[Some(
+                                            wgpu::RenderPassColorAttachment {
+                                                view: &view,
+                                                resolve_target: None,
+                                                ops: wgpu::Operations {
+                                                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                                                        r: 0.1,
+                                                        g: 0.9,
+                                                        b: 0.3,
+                                                        a: 1.0,
+                                                    }),
+                                                    store: wgpu::StoreOp::Store,
+                                                },
+                                            },
+                                        )],
+                                        depth_stencil_attachment: None,
+                                        timestamp_writes: None,
+                                        occlusion_query_set: None,
+                                    });
+                                //     render_pass.set_pipeline(&render_pipeline);
+                                //     render_pass.draw(0..3, 0..1);
+                            }
+
+                            queue.submit(Some(encoder.finish()));
+                            output.present();
                         }
-
-                        queue.submit(Some(encoder.finish()));
-                        output.present();
-                    }
-
-                    _ => (),
+                        _ => (),
+                    };
                 }
+                Event::AboutToWait => {
+                    window.request_redraw();
+                }
+                _ => (),
             }
         })
         .expect("event loop runs");
