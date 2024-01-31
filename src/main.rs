@@ -105,6 +105,12 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             queue.submit(Some(encoder.finish()));
                             output.present();
                         }
+                        WindowEvent::CursorMoved { position, .. } => {
+                            println!("moved {position:?}");
+                        }
+                        WindowEvent::MouseInput { state, button, .. } => {
+                            println!("mouse button {button:?} pressed {state:?}");
+                        }
                         _ => (),
                     };
                 }
