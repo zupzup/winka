@@ -6,8 +6,8 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-struct State<'a> {
-    surface: wgpu::Surface<'a>,
+struct State<'window> {
+    surface: wgpu::Surface<'window>,
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
@@ -15,9 +15,50 @@ struct State<'a> {
     window: Window,
 }
 
-impl State<'_> {
-    async fn new(window: Window) -> Self {
-        todo!();
+impl<'window> State<'window> {
+    async fn new(window: Window) -> State<'window> {
+        let size = window.inner_size();
+
+        let instance = wgpu::Instance::default();
+        let surface = unsafe {
+            instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap())
+        }
+        .expect("can create surface");
+
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptionsBase {
+                power_preference: wgpu::PowerPreference::default(),
+                force_fallback_adapter: false,
+                compatible_surface: Some(&surface),
+            })
+            .await
+            .expect("can create device");
+
+        let (device, queue) = adapter
+            .request_device(
+                &wgpu::DeviceDescriptor {
+                    label: None,
+                    required_features: wgpu::Features::empty(),
+                    required_limits: wgpu::Limits::default(),
+                },
+                None,
+            )
+            .await
+            .expect("can create a new device");
+
+        let config = surface
+            .get_default_config(&adapter, size.width, size.height)
+            .unwrap();
+        surface.configure(&device, &config);
+
+        Self {
+            window,
+            surface,
+            device,
+            queue,
+            config,
+            size,
+        }
     }
 
     pub fn window(&self) -> &Window {
@@ -49,43 +90,11 @@ fn main() {
 }
 
 async fn run(event_loop: EventLoop<()>, window: Window) {
-    let instance = wgpu::Instance::default();
-    let surface = instance
-        .create_surface(&window)
-        .expect("can create surface");
-
-    let adapter = instance
-        .request_adapter(&wgpu::RequestAdapterOptionsBase {
-            power_preference: wgpu::PowerPreference::default(),
-            force_fallback_adapter: false,
-            compatible_surface: Some(&surface),
-        })
-        .await
-        .expect("can create device");
-
-    let (device, queue) = adapter
-        .request_device(
-            &wgpu::DeviceDescriptor {
-                label: None,
-                required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::default(),
-            },
-            None,
-        )
-        .await
-        .expect("can create a new device");
-
-    let size = window.inner_size();
-
-    let config = surface
-        .get_default_config(&adapter, size.width, size.height)
-        .unwrap();
-    surface.configure(&device, &config);
+    let state = State::new(window).await;
 
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
 
-    let window = &window;
     event_loop
         .run(move |event, elwt| {
             match event {
@@ -102,14 +111,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             }
                         }
                         WindowEvent::RedrawRequested => {
-                            let output = surface.get_current_texture().expect("can get texture");
+                            let output = state
+                                .surface
+                                .get_current_texture()
+                                .expect("can get texture");
                             let view = output
                                 .texture
                                 .create_view(&wgpu::TextureViewDescriptor::default());
-                            let mut encoder =
-                                device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                                    label: None,
-                                });
+                            let mut encoder = state.device.create_command_encoder(
+                                &wgpu::CommandEncoderDescriptor { label: None },
+                            );
                             {
                                 let _render_pass =
                                     encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -137,7 +148,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                                 //     render_pass.draw(0..3, 0..1);
                             }
 
-                            queue.submit(Some(encoder.finish()));
+                            state.queue.submit(Some(encoder.finish()));
                             output.present();
                         }
                         WindowEvent::CursorMoved { position, .. } => {
@@ -150,7 +161,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                     };
                 }
                 Event::AboutToWait => {
-                    window.request_redraw();
+                    state.window.request_redraw();
                 }
                 _ => (),
             }
