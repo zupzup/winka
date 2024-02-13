@@ -1,5 +1,6 @@
 use winit::{
-    event::{Event, WindowEvent},
+    dpi::PhysicalPosition,
+    event::{ElementState, Event, MouseButton, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     keyboard::{Key, NamedKey},
     platform::modifier_supplement::KeyEventExtModifierSupplement,
@@ -95,6 +96,9 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
 
+    let mut mouse_coords: PhysicalPosition<f64> = PhysicalPosition { x: 0.0, y: 0.0 };
+    let mut lmb_pressed = false;
+
     event_loop
         .run(move |event, elwt| {
             match event {
@@ -152,11 +156,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             output.present();
                         }
                         WindowEvent::CursorMoved { position, .. } => {
-                            println!("moved {position:?}");
+                            mouse_coords = position;
                         }
-                        WindowEvent::MouseInput { state, button, .. } => {
-                            println!("mouse button {button:?} pressed {state:?}");
-                        }
+                        WindowEvent::MouseInput { state, button, .. } => match state {
+                            ElementState::Pressed => {
+                                println!("{button:?} mouse button pressed at {mouse_coords:?}");
+                            }
+                            ElementState::Released => {
+                                println!("{button:?} mouse button released at {mouse_coords:?}");
+                            }
+                        },
                         _ => (),
                     };
                 }

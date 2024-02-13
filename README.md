@@ -19,6 +19,8 @@
 * `https://www.youtube.com/playlist?list=PLWtPciJ1UMuBs_3G-jFrMJnM5ZMKgl37H` - videos
 * example: `https://github.com/gfx-rs/wgpu/blob/trunk/examples/src/hello_triangle/mod.rs`
 * https://github.com/raphamorim/rio
+* https://github.com/LelsersLasers/UnderwaterWorld
+* https://github.com/rofrol/awesome-wgpu
 
 ## TODO
 
