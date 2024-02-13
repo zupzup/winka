@@ -24,7 +24,7 @@
 
 ## TODO
 
-* Print mouseclick coordinates when they happen
+* Draw triangle
 * Detect if you click in the triangle
 * Change the color of the triangle on click
 * Draw an x button at the top right
