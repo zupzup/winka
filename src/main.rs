@@ -67,11 +67,16 @@ impl<'window> State<'window> {
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        todo!();
+        if new_size.width > 0 && new_size.height > 0 {
+            self.size = new_size;
+            self.config.width = new_size.width;
+            self.config.height = new_size.height;
+            self.surface.configure(&self.device, &self.config);
+        }
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        todo!();
+        false
     }
 
     fn update(&mut self) {
@@ -91,21 +96,19 @@ fn main() {
 }
 
 async fn run(event_loop: EventLoop<()>, window: Window) {
-    let state = State::new(window).await;
+    let mut state = State::new(window).await;
 
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
 
     let mut mouse_coords: PhysicalPosition<f64> = PhysicalPosition { x: 0.0, y: 0.0 };
-    let mut lmb_pressed = false;
 
     event_loop
         .run(move |event, elwt| {
             match event {
-                Event::WindowEvent {
-                    window_id: _,
-                    event,
-                } => {
+                Event::WindowEvent { window_id, event }
+                    if window_id == state.window().id() && !state.input(&event) =>
+                {
                     match event {
                         WindowEvent::CloseRequested => elwt.exit(),
                         WindowEvent::KeyboardInput { event, .. } => {
@@ -113,6 +116,9 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                                 Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
                                 _ => (),
                             }
+                        }
+                        WindowEvent::Resized(physical_size) => {
+                            state.resize(physical_size);
                         }
                         WindowEvent::RedrawRequested => {
                             let output = state
