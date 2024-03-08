@@ -21,6 +21,7 @@
 * https://github.com/raphamorim/rio
 * https://github.com/LelsersLasers/UnderwaterWorld
 * https://github.com/rofrol/awesome-wgpu
+* WGPU 2d Engine https://github.com/darthdeus/comfy
 
 ## TODO
 
