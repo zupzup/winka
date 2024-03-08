@@ -1,3 +1,4 @@
+use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, Event, WindowEvent},
@@ -6,6 +7,96 @@ use winit::{
     platform::modifier_supplement::KeyEventExtModifierSupplement,
     window::{Window, WindowBuilder},
 };
+
+#[repr(C)]
+#[derive(Clone, Debug, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct Vertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+
+impl Vertex {
+    fn desc() -> wgpu::VertexBufferLayout<'static> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+            ],
+        }
+    }
+}
+
+const VERTICES: &[Vertex] = &[
+    Vertex {
+        position: [-0.0868241, 0.49240386, 0.0],
+        color: [0.0, 0.0, 0.5],
+    }, // A
+    Vertex {
+        position: [-0.49513406, 0.06958647, 0.0],
+        color: [0.0, 0.5, 0.0],
+    }, // B
+    Vertex {
+        position: [-0.21918549, -0.44939706, 0.0],
+        color: [0.5, 0.0, 0.0],
+    }, // C
+    Vertex {
+        position: [0.35966998, -0.3473291, 0.0],
+        color: [0.0, 0.5, 0.0],
+    }, // D
+    Vertex {
+        position: [0.44147372, 0.2347359, 0.0],
+        color: [0.0, 0.0, 0.5],
+    }, // E
+];
+
+const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
+
+const VERTICES_TWO: &[Vertex] = &[
+    Vertex {
+        position: [-0.0868241, 0.49240386, 0.0],
+        color: [0.0, 0.0, 0.5],
+    }, // A
+    Vertex {
+        position: [-0.49513406, 0.06958647, 0.0],
+        color: [0.0, 0.5, 0.0],
+    }, // B
+    Vertex {
+        position: [-0.21918549, -0.44939706, 0.0],
+        color: [0.5, 0.0, 0.0],
+    }, // C
+    Vertex {
+        position: [0.35966998, -0.3473291, 0.0],
+        color: [0.0, 0.5, 0.0],
+    }, // D
+    Vertex {
+        position: [0.44147372, 0.2347359, 0.0],
+        color: [0.0, 0.0, 0.5],
+    }, // E
+    Vertex {
+        position: [0.7, 0.2347359, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // F
+    Vertex {
+        position: [0.12, 0.3347359, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // G
+    Vertex {
+        position: [0.24, 0.7347359, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // H
+];
+
+const INDICES_TWO: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4, 5, 6, 7, 1, 4, 6, 2, 5, 7];
 
 struct State<'window> {
     surface: wgpu::Surface<'window>,
@@ -16,14 +107,24 @@ struct State<'window> {
     window: Window,
     mouse_coords: PhysicalPosition<f64>,
     render_pipeline: wgpu::RenderPipeline,
-    other_render_pipeline: wgpu::RenderPipeline,
     use_color: bool,
+    vertex_buffer: wgpu::Buffer,
+    index_buffer: wgpu::Buffer,
+    vertex_buffer_two: wgpu::Buffer,
+    index_buffer_two: wgpu::Buffer,
+    // num_vertices: u32,
+    num_indices: u32,
+    num_indices_two: u32,
 }
 
 impl<'window> State<'window> {
     async fn new(window: Window) -> State<'window> {
         let size = window.inner_size();
         let mouse_coords = PhysicalPosition { x: 0.0, y: 0.0 };
+
+        // let num_vertices = VERTICES.len() as u32;
+        let num_indices = INDICES.len() as u32;
+        let num_indices_two = INDICES_TWO.len() as u32;
 
         let instance = wgpu::Instance::default();
         let surface = unsafe {
@@ -62,11 +163,6 @@ impl<'window> State<'window> {
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
 
-        let other_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: None,
-            source: wgpu::ShaderSource::Wgsl(include_str!("second_shader.wgsl").into()),
-        });
-
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
@@ -80,7 +176,7 @@ impl<'window> State<'window> {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -109,41 +205,29 @@ impl<'window> State<'window> {
             multiview: None,
         });
 
-        let other_render_pipeline =
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: None,
-                layout: Some(&render_pipeline_layout),
-                vertex: wgpu::VertexState {
-                    module: &other_shader,
-                    entry_point: "vs_main",
-                    buffers: &[],
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &other_shader,
-                    entry_point: "fs_main",
-                    targets: &[Some(wgpu::ColorTargetState {
-                        format: config.format,
-                        blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrites::ALL,
-                    })],
-                }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
-                    unclipped_depth: false,
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    conservative: false,
-                },
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                depth_stencil: None,
-                multiview: None,
-            });
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(VERTICES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(INDICES),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        let vertex_buffer_two = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(VERTICES_TWO),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer_two = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(INDICES_TWO),
+            usage: wgpu::BufferUsages::INDEX,
+        });
 
         Self {
             window,
@@ -154,8 +238,14 @@ impl<'window> State<'window> {
             size,
             mouse_coords,
             render_pipeline,
-            other_render_pipeline,
             use_color: true,
+            vertex_buffer,
+            index_buffer,
+            vertex_buffer_two,
+            index_buffer_two,
+            // num_vertices,
+            num_indices,
+            num_indices_two,
         }
     }
 
@@ -232,12 +322,19 @@ impl<'window> State<'window> {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-            if self.use_color {
-                render_pass.set_pipeline(&self.other_render_pipeline);
+
+            render_pass.set_pipeline(&self.render_pipeline);
+            if !self.use_color {
+                render_pass.set_vertex_buffer(0, self.vertex_buffer_two.slice(..));
+                render_pass
+                    .set_index_buffer(self.index_buffer_two.slice(..), wgpu::IndexFormat::Uint16);
+                render_pass.draw_indexed(0..self.num_indices_two, 0, 0..1);
             } else {
-                render_pass.set_pipeline(&self.render_pipeline);
+                render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+                render_pass
+                    .set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+                render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
             }
-            render_pass.draw(0..3, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
