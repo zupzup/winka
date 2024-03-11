@@ -22,6 +22,11 @@
 * https://github.com/LelsersLasers/UnderwaterWorld
 * https://github.com/rofrol/awesome-wgpu
 * WGPU 2d Engine https://github.com/darthdeus/comfy
+* https://github.com/lapce/lapce - built using wgpu
+    * via https://github.com/lapce/floem
+        * https://github.com/lapce/floem/blob/40ab0df2ba86651a811607d6ffc9d5ccce9befe1/vger/src/lib.rs
+* https://github.com/emilk/egui - built using wgpu
+    * via https://github.com/emilk/egui/tree/00a399b2f7eae6bcbe968bdaa7bb77689043bba2/crates/egui-wgpu
 
 ## TODO
 
