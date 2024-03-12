@@ -14,7 +14,10 @@
 ## WGPU 
 
 * https://github.com/linebender/vello
-* https://github.com/grovesNL/glyphon (text rendering)
+* Text
+    * `https://github.com/grovesNL/glyphon`
+        * https://github.com/gfx-rs/wgpu/wiki/Encapsulating-Graphics-Work
+    * `https://github.com/Blatko1/wgpu-text`
 * https://sotrh.github.io/learn-wgpu/beginner/tutorial1-window/#boring-i-know
 * `https://www.youtube.com/playlist?list=PLWtPciJ1UMuBs_3G-jFrMJnM5ZMKgl37H` - videos
 * example: `https://github.com/gfx-rs/wgpu/blob/trunk/examples/src/hello_triangle/mod.rs`
@@ -30,7 +33,6 @@
 
 ## TODO
 
-* Draw triangle
 * Detect if you click in the triangle
 * Change the color of the triangle on click
 * Draw an x button at the top right
