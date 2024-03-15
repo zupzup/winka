@@ -1,3 +1,4 @@
+use std::time::SystemTime;
 use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
@@ -468,6 +469,9 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
 
+    let mut then = SystemTime::now();
+    let mut now = SystemTime::now();
+    let mut fps = 0;
     event_loop
         .run(move |event, elwt| match event {
             Event::WindowEvent { window_id, event }
@@ -494,6 +498,16 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
                             Err(e) => log::error!("render error: {e:?}"),
                         }
+
+                        fps += 1;
+                        if now.duration_since(then).unwrap().as_millis() > 1000 {
+                            state
+                                .window()
+                                .set_title(&format!("wgpu-text: 'simple' example, FPS: {}", fps));
+                            fps = 0;
+                            then = now;
+                        }
+                        now = SystemTime::now();
                     }
                     _ => (),
                 };
