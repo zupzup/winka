@@ -1,3 +1,7 @@
+use glyphon::{
+    Attrs, Buffer, Color, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache, TextArea,
+    TextAtlas, TextBounds, TextRenderer,
+};
 use std::time::SystemTime;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -150,10 +154,12 @@ struct State<'window> {
     num_indices: u32,
     diffuse_bind_group: wgpu::BindGroup,
     diffuse_bind_group_2: wgpu::BindGroup,
-    diffuse_texture: texture::Texture,
-    diffuse_texture_2: texture::Texture,
     instances: Vec<Instance>,
     instance_buffer: wgpu::Buffer,
+    text_renderer: TextRenderer,
+    text_atlas: TextAtlas,
+    text_cache: SwashCache,
+    font_system: FontSystem,
 }
 
 impl<'window> State<'window> {
@@ -190,11 +196,35 @@ impl<'window> State<'window> {
             .await
             .expect("can create a new device");
 
-        let config = surface
-            .get_default_config(&adapter, size.width, size.height)
-            .unwrap();
+        let swapchain_format = wgpu::TextureFormat::Bgra8UnormSrgb;
+
+        // let config = surface
+        //     .get_default_config(&adapter, size.width, size.height)
+        //     .unwrap();
+        let config = wgpu::SurfaceConfiguration {
+            // TODO: needed?
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: swapchain_format,
+            width: size.width,
+            height: size.height,
+            present_mode: wgpu::PresentMode::Fifo,
+            desired_maximum_frame_latency: 2,
+            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+            view_formats: vec![],
+        };
 
         surface.configure(&device, &config);
+
+        // Set up text renderer
+        let font_system = FontSystem::new();
+        let text_cache = SwashCache::new();
+        let mut text_atlas = TextAtlas::new(&device, &queue, swapchain_format);
+        let text_renderer = TextRenderer::new(
+            &mut text_atlas,
+            &device,
+            wgpu::MultisampleState::default(),
+            None,
+        );
 
         let diffuse_bytes = include_bytes!("./happy-tree.png");
 
@@ -355,10 +385,12 @@ impl<'window> State<'window> {
             num_indices,
             diffuse_bind_group,
             diffuse_bind_group_2,
-            diffuse_texture,
-            diffuse_texture_2,
             instances,
             instance_buffer,
+            text_atlas,
+            text_cache,
+            text_renderer,
+            font_system,
         }
     }
 
@@ -411,6 +443,48 @@ impl<'window> State<'window> {
     fn update(&mut self) {}
 
     fn render(&mut self, color: wgpu::Color) -> Result<(), wgpu::SurfaceError> {
+        let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(30.0, 42.0));
+
+        let physical_width = self.size.width as f32;
+        let physical_height = self.size.height as f32;
+
+        buffer.set_size(&mut self.font_system, physical_width, physical_height);
+        buffer.set_text(&mut self.font_system, "Hello world! 👋\nThis is rendered with 🦅 glyphon 🦁\nThe text below should be partially clipped.\na b c d e f g h i j k l m n o p q r s t u v w x y z", Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+        buffer.shape_until_scroll(&mut self.font_system);
+
+        let (left, top) = if self.use_color {
+            (10.0, 10.0)
+        } else {
+            (100.0, 100.0)
+        };
+
+        self.text_renderer
+            .prepare(
+                &self.device,
+                &self.queue,
+                &mut self.font_system,
+                &mut self.text_atlas,
+                Resolution {
+                    width: self.size.width,
+                    height: self.size.height,
+                },
+                [TextArea {
+                    buffer: &buffer,
+                    left,
+                    top,
+                    scale: 5.0,
+                    bounds: TextBounds {
+                        left: 0,
+                        top: 0,
+                        right: 600,
+                        bottom: 560,
+                    },
+                    default_color: Color::rgb(255, 255, 255),
+                }],
+                &mut self.text_cache,
+            )
+            .unwrap();
+
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -448,10 +522,16 @@ impl<'window> State<'window> {
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..self.instances.len() as _);
+            self.text_renderer
+                .render(&self.text_atlas, &mut render_pass)
+                .unwrap();
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
+
         output.present();
+        self.text_atlas.trim();
+
         Ok(())
     }
 }

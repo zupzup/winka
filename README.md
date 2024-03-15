@@ -41,6 +41,7 @@
 * Create a vertical line in the middle of the app
 * Render Text in the left area
 * Render a cursor in the left area
+* Add scale factor
 * On text input, add it to the left area
 * on input, parse markdown from the left area and set the right area to the result
 * Add commandline option which opens the file in the first argument on in the left area
