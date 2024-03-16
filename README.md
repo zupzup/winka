@@ -22,7 +22,7 @@
 
 ## TODO
 
-* Dynamically size triangle, build back to colors, build rectangle
+* Dynamically size triangle
 * Detect if you click in the triangle
 * Change the color of the triangle on click
 * Draw an x button at the top right

@@ -13,6 +13,8 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+mod rectangle;
+
 #[repr(C)]
 #[derive(Clone, Debug, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
@@ -41,31 +43,6 @@ impl Vertex {
     }
 }
 
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        // A
-        position: [0.0, 0.1, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        // B
-        position: [0.0, 0.0, 0.0],
-        color: [0.0, 1.0, 0.0],
-    },
-    Vertex {
-        // C
-        position: [0.1, 0.0, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
-    Vertex {
-        // D
-        position: [0.1, 0.1, 0.0],
-        color: [0.0, 1.0, 0.0],
-    },
-];
-
-const INDICES: &[u16] = &[0, 1, 2, 0, 2, 3];
-
 struct State<'window> {
     surface: wgpu::Surface<'window>,
     device: wgpu::Device,
@@ -76,9 +53,6 @@ struct State<'window> {
     mouse_coords: PhysicalPosition<f64>,
     render_pipeline: wgpu::RenderPipeline,
     use_color: bool,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    num_indices: u32,
     text_renderer: TextRenderer,
     text_atlas: TextAtlas,
     text_cache: SwashCache,
@@ -89,8 +63,6 @@ impl<'window> State<'window> {
     async fn new(window: Window) -> State<'window> {
         let size = window.inner_size();
         let mouse_coords = PhysicalPosition { x: 0.0, y: 0.0 };
-
-        let num_indices = INDICES.len() as u32;
 
         let instance = wgpu::Instance::default();
         let surface = unsafe {
@@ -184,18 +156,6 @@ impl<'window> State<'window> {
             multiview: None,
         });
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
-
         Self {
             window,
             surface,
@@ -206,9 +166,6 @@ impl<'window> State<'window> {
             mouse_coords,
             render_pipeline,
             use_color: true,
-            vertex_buffer,
-            index_buffer,
-            num_indices,
             text_atlas,
             text_cache,
             text_renderer,
@@ -265,11 +222,34 @@ impl<'window> State<'window> {
     fn update(&mut self) {}
 
     fn render(&mut self, color: wgpu::Color) -> Result<(), wgpu::SurfaceError> {
-        let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(30.0, 42.0));
+        let vertex_color = if self.use_color {
+            [1.0, 0.0, 1.0]
+        } else {
+            [0.0, 1.0, 1.0]
+        };
+
+        let rectangle = rectangle::Rectangle::new(vertex_color);
+
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(rectangle.vertices()),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(rectangle.indices()),
+                usage: wgpu::BufferUsages::INDEX,
+            });
 
         let physical_width = self.size.width as f32;
         let physical_height = self.size.height as f32;
 
+        let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(30.0, 42.0));
         buffer.set_size(&mut self.font_system, physical_width, physical_height);
         buffer.set_text(
             &mut self.font_system,
@@ -340,9 +320,9 @@ impl<'window> State<'window> {
             // TODO: color change
 
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.draw_indexed(0..rectangle.num_indices(), 0, 0..1);
             self.text_renderer
                 .render(&self.text_atlas, &mut render_pass)
                 .unwrap();
