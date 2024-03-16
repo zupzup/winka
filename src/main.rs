@@ -13,8 +13,6 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-mod texture;
-
 struct Instance {
     position: cgmath::Vector3<f32>,
 }
@@ -69,7 +67,7 @@ impl InstanceRaw {
 #[derive(Clone, Debug, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
     position: [f32; 3],
-    tex_coords: [f32; 2],
+    color: [f32; 3],
 }
 
 impl Vertex {
@@ -99,43 +97,17 @@ const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(0.5, 0.
 const VERTICES: &[Vertex] = &[
     Vertex {
         position: [0.0, 0.1, 0.0],
-        tex_coords: [0.4131759, 0.00759614],
-    }, // A
+        color: [1.0, 0.0, 0.0],
+    },
     Vertex {
         position: [-0.1, -0.1, 0.0],
-        tex_coords: [0.0048659444, 0.43041354],
-    }, // B
+        color: [0.0, 1.0, 0.0],
+    },
     Vertex {
         position: [0.1, -0.1, 0.0],
-        tex_coords: [0.28081453, 0.949397],
-    }, // C
-       // Vertex {
-       //     position: [-0.0868241, 0.49240386, 0.0],
-       //     tex_coords: [0.4131759, 0.00759614],
-       // }, // A
-       // Vertex {
-       //     position: [-0.49513406, 0.06958647, 0.0],
-       //     tex_coords: [0.0048659444, 0.43041354],
-       // }, // B
-       // Vertex {
-       //     position: [-0.21918549, -0.44939706, 0.0],
-       //     tex_coords: [0.28081453, 0.949397],
-       // }, // C
-       // Vertex {
-       //     position: [0.35966998, -0.3473291, 0.0],
-       //     tex_coords: [0.85967, 0.84732914],
-       // }, // D
-       // Vertex {
-       //     position: [0.44147372, 0.2347359, 0.0],
-       //     tex_coords: [0.9414737, 0.2652641],
-       // }, // E
+        color: [0.0, 0.0, 1.0],
+    },
 ];
-
-// const VERTICES: &[Vertex] = &[
-//     Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0] },
-//     Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0] },
-//     Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0] },
-// ];
 
 const INDICES: &[u16] = &[0, 1, 2];
 
@@ -152,8 +124,6 @@ struct State<'window> {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
-    diffuse_bind_group: wgpu::BindGroup,
-    diffuse_bind_group_2: wgpu::BindGroup,
     instances: Vec<Instance>,
     instance_buffer: wgpu::Buffer,
     text_renderer: TextRenderer,
@@ -198,24 +168,12 @@ impl<'window> State<'window> {
 
         let swapchain_format = wgpu::TextureFormat::Bgra8UnormSrgb;
 
-        // let config = surface
-        //     .get_default_config(&adapter, size.width, size.height)
-        //     .unwrap();
-        let config = wgpu::SurfaceConfiguration {
-            // TODO: needed?
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: swapchain_format,
-            width: size.width,
-            height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
-            desired_maximum_frame_latency: 2,
-            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
-            view_formats: vec![],
-        };
+        let config = surface
+            .get_default_config(&adapter, size.width, size.height)
+            .unwrap();
 
         surface.configure(&device, &config);
 
-        // Set up text renderer
         let font_system = FontSystem::new();
         let text_cache = SwashCache::new();
         let mut text_atlas = TextAtlas::new(&device, &queue, swapchain_format);
@@ -226,69 +184,6 @@ impl<'window> State<'window> {
             None,
         );
 
-        let diffuse_bytes = include_bytes!("./happy-tree.png");
-
-        let diffuse_texture =
-            texture::Texture::from_bytes(&device, &queue, diffuse_bytes, "happy-tree.png").unwrap();
-
-        let diffuse_bytes_2 = include_bytes!("./me.png");
-
-        let diffuse_texture_2 =
-            texture::Texture::from_bytes(&device, &queue, diffuse_bytes_2, "me.png").unwrap();
-
-        let texture_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            multisampled: false,
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-                label: None,
-            });
-
-        let diffuse_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
-                },
-            ],
-            label: None,
-        });
-
-        let diffuse_bind_group_2 = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_2.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_2.sampler),
-                },
-            ],
-            label: None,
-        });
-
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: None,
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
@@ -297,7 +192,7 @@ impl<'window> State<'window> {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
-                bind_group_layouts: &[&texture_bind_group_layout],
+                bind_group_layouts: &[],
                 push_constant_ranges: &[],
             });
 
@@ -381,10 +276,7 @@ impl<'window> State<'window> {
             use_color: true,
             vertex_buffer,
             index_buffer,
-            // num_vertices,
             num_indices,
-            diffuse_bind_group,
-            diffuse_bind_group_2,
             instances,
             instance_buffer,
             text_atlas,
@@ -449,7 +341,12 @@ impl<'window> State<'window> {
         let physical_height = self.size.height as f32;
 
         buffer.set_size(&mut self.font_system, physical_width, physical_height);
-        buffer.set_text(&mut self.font_system, "Hello world! 👋\nThis is rendered with 🦅 glyphon 🦁\nThe text below should be partially clipped.\na b c d e f g h i j k l m n o p q r s t u v w x y z", Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+        buffer.set_text(
+            &mut self.font_system,
+            "Hello world! 👋\nThis is rendered with 🦅 glyphon 🦁",
+            Attrs::new().family(Family::SansSerif),
+            Shaping::Advanced,
+        );
         buffer.shape_until_scroll(&mut self.font_system);
 
         let (left, top) = if self.use_color {
@@ -510,14 +407,9 @@ impl<'window> State<'window> {
                 occlusion_query_set: None,
             });
 
-            let bind_group = if self.use_color {
-                &self.diffuse_bind_group
-            } else {
-                &self.diffuse_bind_group_2
-            };
+            // TODO: color change
 
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_bind_group(0, bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
