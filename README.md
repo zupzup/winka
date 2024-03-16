@@ -22,15 +22,12 @@
 
 ## TODO
 
-* Dynamically size triangle
-* Detect if you click in the triangle
-* Change the color of the triangle on click
-* Draw an x button at the top right
-* Clicking on the x closes the app
-* Create a vertical line in the middle of the app
-* Render Text in the left area
-* Render a cursor in the left area
-* Add scale factor
+* Position the rectangle according to top-left x and y
+* Dynamically size the rectangle
+* Draw a border around rectangle (using shader: https://community.khronos.org/t/drawing-rectangle-with-border/74487/2)
+* Detect if you click in the rectangle
+* Change the color of the rectangle on click
+* Render Text in the rectangle
 * On text input, add it to the left area
 * on input, parse markdown from the left area and set the right area to the result
 * Add commandline option which opens the file in the first argument on in the left area
