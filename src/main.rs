@@ -96,20 +96,28 @@ const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(0.5, 0.
 
 const VERTICES: &[Vertex] = &[
     Vertex {
+        // A
         position: [0.0, 0.1, 0.0],
         color: [1.0, 0.0, 0.0],
     },
     Vertex {
-        position: [-0.1, -0.1, 0.0],
+        // B
+        position: [0.0, 0.0, 0.0],
         color: [0.0, 1.0, 0.0],
     },
     Vertex {
-        position: [0.1, -0.1, 0.0],
+        // C
+        position: [0.1, 0.0, 0.0],
         color: [0.0, 0.0, 1.0],
+    },
+    Vertex {
+        // D
+        position: [0.1, 0.1, 0.0],
+        color: [0.0, 1.0, 0.0],
     },
 ];
 
-const INDICES: &[u16] = &[0, 1, 2];
+const INDICES: &[u16] = &[0, 1, 2, 0, 2, 3];
 
 struct State<'window> {
     surface: wgpu::Surface<'window>,
