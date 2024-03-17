@@ -199,8 +199,9 @@ impl<'window> State<'window> {
                 }
                 ElementState::Released => {
                     log::info!(
-                        "{button:?} mouse button released at {:?}",
-                        self.mouse_coords
+                        "{button:?} mouse button released at {:?}, size: {:?}",
+                        self.mouse_coords,
+                        self.size
                     );
                     true
                 }
@@ -228,7 +229,12 @@ impl<'window> State<'window> {
             [0.0, 1.0, 1.0]
         };
 
-        let rectangle = rectangle::Rectangle::new(vertex_color);
+        let rectangle = rectangle::Rectangle::new(0, 0, 200, 100, vertex_color, self.size); // TODO:
+                                                                                            // nicer
+                                                                                            // api
+                                                                                            // with
+                                                                                            // named
+                                                                                            // params - e.g. builder pattern
 
         let vertex_buffer = self
             .device
@@ -260,7 +266,7 @@ impl<'window> State<'window> {
         buffer.shape_until_scroll(&mut self.font_system);
 
         let (left, top) = if self.use_color {
-            (10.0, 10.0)
+            (0.0, 0.0)
         } else {
             (100.0, 100.0)
         };
@@ -279,7 +285,7 @@ impl<'window> State<'window> {
                     buffer: &buffer,
                     left,
                     top,
-                    scale: 5.0,
+                    scale: 1.0,
                     bounds: TextBounds {
                         left: 0,
                         top: 0,
