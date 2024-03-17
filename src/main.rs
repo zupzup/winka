@@ -229,12 +229,12 @@ impl<'window> State<'window> {
             [0.0, 1.0, 1.0]
         };
 
-        let rectangle = rectangle::Rectangle::new(0, 0, 200, 100, vertex_color, self.size); // TODO:
-                                                                                            // nicer
-                                                                                            // api
-                                                                                            // with
-                                                                                            // named
-                                                                                            // params - e.g. builder pattern
+        let rectangle = rectangle::Rectangle::new(100, 100, 100, 100, vertex_color, self.size); // TODO:
+                                                                                                // nicer
+                                                                                                // api
+                                                                                                // with
+                                                                                                // named
+                                                                                                // params - e.g. builder pattern
 
         let vertex_buffer = self
             .device
