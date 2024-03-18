@@ -1,4 +1,5 @@
 use crate::Vertex;
+use log::debug;
 
 pub struct RectPos {
     pub top: u32,
@@ -25,7 +26,8 @@ impl Rectangle {
         let left = (pos.left as f32 / (size.width as f32 / 2.0)) - 1.0;
         let bottom = 1.0 - (pos.bottom as f32 / (size.height as f32 / 2.0));
         let right = (pos.right as f32 / (size.width as f32 / 2.0)) - 1.0;
-        println!(
+
+        debug!(
             "top: {top} left: {left} bottom: {bottom} right: {right} size: {}/{}",
             size.width, size.height
         );

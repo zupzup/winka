@@ -230,16 +230,23 @@ impl<'window> State<'window> {
             [0.0, 1.0, 1.0]
         };
 
-        let rectangle = Rectangle::new(
+        let rect_pos = if self.use_color {
+            RectPos {
+                top: 100,
+                left: 100,
+                bottom: 300,
+                right: 500,
+            }
+        } else {
             RectPos {
                 top: 1000,
                 left: 1500,
                 bottom: 1300,
                 right: 2500,
-            },
-            vertex_color,
-            self.size,
-        );
+            }
+        };
+
+        let rectangle = Rectangle::new(rect_pos, vertex_color, self.size);
 
         let vertex_buffer = self
             .device
