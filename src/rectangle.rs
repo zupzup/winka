@@ -1,5 +1,12 @@
 use crate::Vertex;
 
+pub struct RectPos {
+    pub top: u32,
+    pub left: u32,
+    pub bottom: u32,
+    pub right: u32,
+}
+
 pub struct Rectangle {
     vertices: [Vertex; 4],
     indices: [u16; 6],
@@ -13,22 +20,14 @@ pub struct Rectangle {
 //  B--------C
 //  -1, -1   1, -1
 impl Rectangle {
-    pub fn new(
-        top: u32,
-        left: u32,
-        width: u32,
-        height: u32,
-        color: [f32; 3],
-        size: winit::dpi::PhysicalSize<u32>,
-    ) -> Self {
-        // TODO: fix calculation and clean up
-        let top = 1.0 - (top as f32 / (size.height as f32 / 2.0));
-        let left = (left as f32 / (size.width as f32 / 2.0)) - 1.0;
-        let width = (width as f32 / (size.width as f32 / 2.0)) - 1.0;
-        let height = 1.0 - (height as f32 / (size.height as f32 / 2.0));
+    pub fn new(pos: RectPos, color: [f32; 3], size: winit::dpi::PhysicalSize<u32>) -> Self {
+        let top = 1.0 - (pos.top as f32 / (size.height as f32 / 2.0));
+        let left = (pos.left as f32 / (size.width as f32 / 2.0)) - 1.0;
+        let bottom = 1.0 - (pos.bottom as f32 / (size.height as f32 / 2.0));
+        let right = (pos.right as f32 / (size.width as f32 / 2.0)) - 1.0;
         println!(
-            "top: {top} left: {left} width: {width} height: {height} size: {}/{}, A: {}, {}, B: {}, {}, C: {}, {}, D: {}, {}",
-            size.width, size.height, left, top, left, top-height, left-width, top-height, left-width, top
+            "top: {top} left: {left} bottom: {bottom} right: {right} size: {}/{}",
+            size.width, size.height
         );
 
         let vertices = [
@@ -39,17 +38,17 @@ impl Rectangle {
             },
             Vertex {
                 // B
-                position: [left, top + height - 1.0, 0.0],
+                position: [left, bottom, 0.0],
                 color,
             },
             Vertex {
                 // C
-                position: [left + width + 1.0, top + height - 1.0, 0.0],
+                position: [right, bottom, 0.0],
                 color,
             },
             Vertex {
                 // D
-                position: [left + width + 1.0, top, 0.0],
+                position: [right, top, 0.0],
                 color,
             },
         ];

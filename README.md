@@ -19,6 +19,7 @@
     * https://github.com/lapce/floem/blob/main/vger/src/lib.rs
 * https://github.com/emilk/egui - built using wgpu
     * via https://github.com/emilk/egui/blob/master/crates/egui-wgpu/src/lib.rs
+    * https://github.com/emilk/egui/blob/master/crates/egui-wgpu/src/lib.rs
 
 ## TODO
 

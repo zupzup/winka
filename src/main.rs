@@ -2,6 +2,7 @@ use glyphon::{
     Attrs, Buffer, Color, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache, TextArea,
     TextAtlas, TextBounds, TextRenderer,
 };
+use rectangle::*;
 use std::time::SystemTime;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -229,12 +230,16 @@ impl<'window> State<'window> {
             [0.0, 1.0, 1.0]
         };
 
-        let rectangle = rectangle::Rectangle::new(100, 100, 100, 100, vertex_color, self.size); // TODO:
-                                                                                                // nicer
-                                                                                                // api
-                                                                                                // with
-                                                                                                // named
-                                                                                                // params - e.g. builder pattern
+        let rectangle = Rectangle::new(
+            RectPos {
+                top: 1000,
+                left: 1500,
+                bottom: 1300,
+                right: 2500,
+            },
+            vertex_color,
+            self.size,
+        );
 
         let vertex_buffer = self
             .device
