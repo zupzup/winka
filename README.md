@@ -23,9 +23,8 @@
 
 ## TODO
 
-* Draw a border around rectangle (using shader: https://community.khronos.org/t/drawing-rectangle-with-border/74487/2)
 * Detect if you click in the rectangle
-* Change the color of the rectangle on click
+* Change the border color of the rectangle on click
 * Render Text in the rectangle
 * On text input, add it to the left area
 * on input, parse markdown from the left area and set the right area to the result

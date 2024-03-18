@@ -32,26 +32,37 @@ impl Rectangle {
             size.width, size.height
         );
 
+        let rect = [
+            pos.top as f32,
+            pos.left as f32,
+            pos.bottom as f32,
+            pos.right as f32,
+        ];
+
         let vertices = [
             Vertex {
                 // A
                 position: [left, top, 0.0],
                 color,
+                rect,
             },
             Vertex {
                 // B
                 position: [left, bottom, 0.0],
                 color,
+                rect,
             },
             Vertex {
                 // C
                 position: [right, bottom, 0.0],
                 color,
+                rect,
             },
             Vertex {
                 // D
                 position: [right, top, 0.0],
                 color,
+                rect,
             },
         ];
 

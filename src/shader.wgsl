@@ -3,11 +3,13 @@
 struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) color: vec3<f32>,
+    @location(2) rect: vec4<f32>,
 }
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) color: vec3<f32>,
+    @location(1) rect: vec4<f32>,
 }
 
 @vertex
@@ -18,6 +20,7 @@ fn vs_main(
 
     out.color = model.color;
     out.clip_position = vec4<f32>(model.position, 1.0);
+    out.rect = model.rect;
 
     return out;
 }
@@ -25,5 +28,15 @@ fn vs_main(
 // Fragment shader
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    var border_width: f32 = 2.0;
+    var top: f32 = in.rect[0];
+    var left: f32 = in.rect[1];
+    var bottom: f32 = in.rect[2];
+    var right: f32 = in.rect[3];
+    var leftborder: f32 = left + border_width;
+
+    if (((in.clip_position.x > left && in.clip_position.x < (left + border_width)) || (in.clip_position.x > (right - border_width) && in.clip_position.x < right)) || ((in.clip_position.y > top && in.clip_position.y < (top + border_width)) || (in.clip_position.y > (bottom - border_width) && in.clip_position.y < bottom )))  {
+        return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    }
     return vec4<f32>(in.color, 1.0);
 }
