@@ -239,10 +239,10 @@ impl<'window> State<'window> {
             }
         } else {
             RectPos {
-                top: 1000,
-                left: 1500,
-                bottom: 1300,
-                right: 2500,
+                top: 100,
+                left: 100,
+                bottom: 500,
+                right: 700,
             }
         };
 

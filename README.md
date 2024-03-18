@@ -23,8 +23,6 @@
 
 ## TODO
 
-* Position the rectangle according to top-left x and y
-* Dynamically size the rectangle
 * Draw a border around rectangle (using shader: https://community.khronos.org/t/drawing-rectangle-with-border/74487/2)
 * Detect if you click in the rectangle
 * Change the color of the rectangle on click
