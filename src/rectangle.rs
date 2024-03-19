@@ -21,7 +21,12 @@ pub struct Rectangle {
 //  B--------C
 //  -1, -1   1, -1
 impl Rectangle {
-    pub fn new(pos: RectPos, color: [f32; 3], size: winit::dpi::PhysicalSize<u32>) -> Self {
+    pub fn new(
+        pos: RectPos,
+        color: [f32; 3],
+        border_color: [f32; 3],
+        size: winit::dpi::PhysicalSize<u32>,
+    ) -> Self {
         let top = 1.0 - (pos.top as f32 / (size.height as f32 / 2.0));
         let left = (pos.left as f32 / (size.width as f32 / 2.0)) - 1.0;
         let bottom = 1.0 - (pos.bottom as f32 / (size.height as f32 / 2.0));
@@ -45,24 +50,28 @@ impl Rectangle {
                 position: [left, top, 0.0],
                 color,
                 rect,
+                border_color,
             },
             Vertex {
                 // B
                 position: [left, bottom, 0.0],
                 color,
                 rect,
+                border_color,
             },
             Vertex {
                 // C
                 position: [right, bottom, 0.0],
                 color,
                 rect,
+                border_color,
             },
             Vertex {
                 // D
                 position: [right, top, 0.0],
                 color,
                 rect,
+                border_color,
             },
         ];
 

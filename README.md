@@ -23,11 +23,10 @@
 
 ## TODO
 
-* Detect if you click in the rectangle
-* Change the border color of the rectangle on click
-* Render Text in the rectangle
-* On text input, add it to the left area
-* on input, parse markdown from the left area and set the right area to the result
-* Add commandline option which opens the file in the first argument on in the left area
-* Implement proper result-rendering
+* Render Text "submit" within the rectangle
+* Create a separate text input field
+    * on click, it's active - different border color
+    * if it's active and text is input, it shows in the text field
+    * Create a blinking cursor within it
+* Create "success" notification on clicking submit with the entered text
 

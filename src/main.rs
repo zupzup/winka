@@ -22,6 +22,7 @@ struct Vertex {
     position: [f32; 3],
     color: [f32; 3],
     rect: [f32; 4],
+    border_color: [f32; 3],
 }
 
 impl Vertex {
@@ -38,12 +39,17 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x2,
+                    format: wgpu::VertexFormat::Float32x3,
                 },
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
                     shader_location: 2,
                     format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 10]>() as wgpu::BufferAddress,
+                    shader_location: 3,
+                    format: wgpu::VertexFormat::Float32x3,
                 },
             ],
         }
@@ -60,6 +66,7 @@ struct State<'window> {
     mouse_coords: PhysicalPosition<f64>,
     render_pipeline: wgpu::RenderPipeline,
     use_color: bool,
+    clicked: bool,
     text_renderer: TextRenderer,
     text_atlas: TextAtlas,
     text_cache: SwashCache,
@@ -173,6 +180,7 @@ impl<'window> State<'window> {
             mouse_coords,
             render_pipeline,
             use_color: true,
+            clicked: false,
             text_atlas,
             text_cache,
             text_renderer,
@@ -201,14 +209,25 @@ impl<'window> State<'window> {
             }
             WindowEvent::MouseInput { state, button, .. } => match state {
                 ElementState::Pressed => {
-                    log::info!("{button:?} mouse button pressed at {:?}", self.mouse_coords);
+                    if button == &winit::event::MouseButton::Left {
+                        self.clicked = true;
+                    }
+                    log::info!(
+                        "{button:?} mouse button pressed at {:?}, clicked: {}",
+                        self.mouse_coords,
+                        self.clicked
+                    );
                     true
                 }
                 ElementState::Released => {
+                    if button == &winit::event::MouseButton::Left {
+                        self.clicked = false;
+                    }
                     log::info!(
-                        "{button:?} mouse button released at {:?}, size: {:?}",
+                        "{button:?} mouse button released at {:?}, size: {:?}, clicked: {}",
                         self.mouse_coords,
-                        self.size
+                        self.size,
+                        self.clicked
                     );
                     true
                 }
@@ -230,31 +249,28 @@ impl<'window> State<'window> {
     fn update(&mut self) {}
 
     fn render(&mut self, color: wgpu::Color) -> Result<(), wgpu::SurfaceError> {
-        let vertex_color = if self.use_color {
-            [1.0, 0.0, 1.0]
-        } else {
-            [0.0, 1.0, 1.0]
+        let mut vertex_color = [0.5, 0.0, 0.5];
+        let mut border_color = [0.0, 0.0, 0.0];
+
+        let rect_pos = RectPos {
+            top: 100,
+            left: 100,
+            bottom: 300,
+            right: 500,
         };
 
-        // TODO: add bind group for rect for border
-
-        let rect_pos = if self.use_color {
-            RectPos {
-                top: 100,
-                left: 100,
-                bottom: 300,
-                right: 500,
+        if self.mouse_coords.x > rect_pos.left as f64
+            && self.mouse_coords.x < rect_pos.right as f64
+            && self.mouse_coords.y > rect_pos.top as f64
+            && self.mouse_coords.y < rect_pos.bottom as f64
+        {
+            vertex_color = [1.0, 0.0, 1.0];
+            if self.clicked {
+                border_color = [1.0, 1.0, 1.0];
             }
-        } else {
-            RectPos {
-                top: 100,
-                left: 100,
-                bottom: 500,
-                right: 700,
-            }
-        };
+        }
 
-        let rectangle = Rectangle::new(rect_pos, vertex_color, self.size);
+        let rectangle = Rectangle::new(rect_pos, vertex_color, border_color, self.size);
 
         let vertex_buffer = self
             .device
