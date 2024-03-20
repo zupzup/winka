@@ -22,7 +22,7 @@ pub struct Rectangle {
 //  -1, -1   1, -1
 impl Rectangle {
     pub fn new(
-        pos: RectPos,
+        pos: &RectPos,
         color: [f32; 3],
         border_color: [f32; 3],
         size: winit::dpi::PhysicalSize<u32>,

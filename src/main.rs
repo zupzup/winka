@@ -270,7 +270,7 @@ impl<'window> State<'window> {
             }
         }
 
-        let rectangle = Rectangle::new(rect_pos, vertex_color, border_color, self.size);
+        let rectangle = Rectangle::new(&rect_pos, vertex_color, border_color, self.size);
 
         let vertex_buffer = self
             .device
@@ -288,24 +288,22 @@ impl<'window> State<'window> {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        let physical_width = self.size.width as f32;
-        let physical_height = self.size.height as f32;
-
         let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(30.0, 42.0));
-        buffer.set_size(&mut self.font_system, physical_width, physical_height);
+        buffer.set_size(
+            &mut self.font_system,
+            (rect_pos.right - rect_pos.left) as f32,
+            (rect_pos.bottom - rect_pos.top) as f32,
+        );
         buffer.set_text(
             &mut self.font_system,
-            "Hello world! 👋\nThis is rendered with 🦅 glyphon 🦁",
+            "Submit 🚀",
             Attrs::new().family(Family::SansSerif),
             Shaping::Advanced,
         );
+        buffer.lines.iter_mut().for_each(|line| {
+            line.set_align(Some(glyphon::cosmic_text::Align::Center));
+        });
         buffer.shape_until_scroll(&mut self.font_system);
-
-        let (left, top) = if self.use_color {
-            (0.0, 0.0)
-        } else {
-            (100.0, 100.0)
-        };
 
         self.text_renderer
             .prepare(
@@ -319,14 +317,14 @@ impl<'window> State<'window> {
                 },
                 [TextArea {
                     buffer: &buffer,
-                    left,
-                    top,
+                    left: rect_pos.left as f32,
+                    top: rect_pos.top as f32,
                     scale: 1.0,
                     bounds: TextBounds {
-                        left: 0,
-                        top: 0,
-                        right: 600,
-                        bottom: 560,
+                        left: rect_pos.left as i32,
+                        top: rect_pos.top as i32,
+                        right: rect_pos.right as i32,
+                        bottom: rect_pos.bottom as i32,
                     },
                     default_color: Color::rgb(255, 255, 255),
                 }],
