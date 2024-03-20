@@ -255,7 +255,7 @@ impl<'window> State<'window> {
         let rect_pos = RectPos {
             top: 100,
             left: 100,
-            bottom: 300,
+            bottom: 400,
             right: 500,
         };
 
@@ -318,7 +318,9 @@ impl<'window> State<'window> {
                 [TextArea {
                     buffer: &buffer,
                     left: rect_pos.left as f32,
-                    top: rect_pos.top as f32,
+                    // 400 - (400-100)/2
+                    top: ((rect_pos.bottom - (rect_pos.bottom - rect_pos.top) / 2) as f32
+                        - (buffer.metrics().line_height / 2.0)),
                     scale: 1.0,
                     bounds: TextBounds {
                         left: rect_pos.left as i32,

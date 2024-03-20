@@ -23,7 +23,7 @@
 
 ## TODO
 
-* Render Text "submit" within the rectangle
+* refactor to `Button`
 * Create a separate text input field
     * on click, it's active - different border color
     * if it's active and text is input, it shows in the text field
