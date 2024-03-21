@@ -1,5 +1,5 @@
 use crate::Vertex;
-use log::debug;
+use winit::dpi::PhysicalPosition;
 
 pub struct RectPos {
     pub top: u32,
@@ -9,42 +9,64 @@ pub struct RectPos {
 }
 
 pub struct Rectangle {
-    vertices: [Vertex; 4],
-    indices: [u16; 6],
+    position: RectPos,
+    color: [f32; 3],
+    border_color: [f32; 3],
 }
 
-//  -1, 1    1,1
-//  A--------D
-//  |        |
-//  |        |
-//  |        |
-//  B--------C
-//  -1, -1   1, -1
 impl Rectangle {
-    pub fn new(
-        pos: &RectPos,
-        color: [f32; 3],
-        border_color: [f32; 3],
-        size: winit::dpi::PhysicalSize<u32>,
-    ) -> Self {
-        let top = 1.0 - (pos.top as f32 / (size.height as f32 / 2.0));
-        let left = (pos.left as f32 / (size.width as f32 / 2.0)) - 1.0;
-        let bottom = 1.0 - (pos.bottom as f32 / (size.height as f32 / 2.0));
-        let right = (pos.right as f32 / (size.width as f32 / 2.0)) - 1.0;
+    pub fn new(position: RectPos, color: [f32; 3], border_color: [f32; 3]) -> Self {
+        Self {
+            color,
+            border_color,
+            position,
+        }
+    }
 
-        debug!(
-            "top: {top} left: {left} bottom: {bottom} right: {right} size: {}/{}",
-            size.width, size.height
-        );
+    pub fn position(&self) -> &RectPos {
+        &self.position
+    }
+
+    pub fn vertices(
+        &mut self,
+        mouse_coords: PhysicalPosition<f64>,
+        clicked: bool,
+        size: winit::dpi::PhysicalSize<u32>,
+    ) -> [Vertex; 4] {
+        // TODO: memoize these calculations for size
+        let top = 1.0 - (self.position.top as f32 / (size.height as f32 / 2.0));
+        let left = (self.position.left as f32 / (size.width as f32 / 2.0)) - 1.0;
+        let bottom = 1.0 - (self.position.bottom as f32 / (size.height as f32 / 2.0));
+        let right = (self.position.right as f32 / (size.width as f32 / 2.0)) - 1.0;
 
         let rect = [
-            pos.top as f32,
-            pos.left as f32,
-            pos.bottom as f32,
-            pos.right as f32,
+            self.position.top as f32,
+            self.position.left as f32,
+            self.position.bottom as f32,
+            self.position.right as f32,
         ];
+        let mut color = self.color;
+        let mut border_color = self.border_color;
 
-        let vertices = [
+        if mouse_coords.x > self.position.left as f64
+            && mouse_coords.x < self.position.right as f64
+            && mouse_coords.y > self.position.top as f64
+            && mouse_coords.y < self.position.bottom as f64
+        {
+            color = [1.0, 0.0, 1.0];
+            if clicked {
+                border_color = [1.0, 1.0, 1.0];
+            }
+        }
+
+        //  -1, 1    1,1
+        //  A--------D
+        //  |        |
+        //  |        |
+        //  |        |
+        //  B--------C
+        //  -1, -1   1, -1
+        [
             Vertex {
                 // A
                 position: [left, top, 0.0],
@@ -73,21 +95,14 @@ impl Rectangle {
                 rect,
                 border_color,
             },
-        ];
-
-        let indices = [0, 1, 2, 0, 2, 3];
-        Self { vertices, indices }
+        ]
     }
 
-    pub fn vertices(&self) -> &[Vertex; 4] {
-        &self.vertices
-    }
-
-    pub fn indices(&self) -> &[u16; 6] {
-        &self.indices
+    pub fn indices(&self) -> [u16; 6] {
+        [0, 1, 2, 0, 2, 3]
     }
 
     pub fn num_indices(&self) -> u32 {
-        self.indices.len() as u32
+        6
     }
 }

@@ -71,6 +71,7 @@ struct State<'window> {
     text_atlas: TextAtlas,
     text_cache: SwashCache,
     font_system: FontSystem,
+    rectangle: Rectangle,
 }
 
 impl<'window> State<'window> {
@@ -170,6 +171,17 @@ impl<'window> State<'window> {
             multiview: None,
         });
 
+        let rectangle = Rectangle::new(
+            RectPos {
+                top: 100,
+                left: 100,
+                bottom: 400,
+                right: 500,
+            },
+            [0.5, 0.0, 0.5],
+            [0.0, 0.0, 0.0],
+        );
+
         Self {
             window,
             surface,
@@ -185,6 +197,7 @@ impl<'window> State<'window> {
             text_cache,
             text_renderer,
             font_system,
+            rectangle,
         }
     }
 
@@ -249,34 +262,15 @@ impl<'window> State<'window> {
     fn update(&mut self) {}
 
     fn render(&mut self, color: wgpu::Color) -> Result<(), wgpu::SurfaceError> {
-        let mut vertex_color = [0.5, 0.0, 0.5];
-        let mut border_color = [0.0, 0.0, 0.0];
-
-        let rect_pos = RectPos {
-            top: 100,
-            left: 100,
-            bottom: 400,
-            right: 500,
-        };
-
-        if self.mouse_coords.x > rect_pos.left as f64
-            && self.mouse_coords.x < rect_pos.right as f64
-            && self.mouse_coords.y > rect_pos.top as f64
-            && self.mouse_coords.y < rect_pos.bottom as f64
-        {
-            vertex_color = [1.0, 0.0, 1.0];
-            if self.clicked {
-                border_color = [1.0, 1.0, 1.0];
-            }
-        }
-
-        let rectangle = Rectangle::new(&rect_pos, vertex_color, border_color, self.size);
-
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(rectangle.vertices()),
+                contents: bytemuck::cast_slice(&self.rectangle.vertices(
+                    self.mouse_coords,
+                    self.clicked,
+                    self.size,
+                )),
                 usage: wgpu::BufferUsages::VERTEX,
             });
 
@@ -284,15 +278,15 @@ impl<'window> State<'window> {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(rectangle.indices()),
+                contents: bytemuck::cast_slice(&self.rectangle.indices()),
                 usage: wgpu::BufferUsages::INDEX,
             });
 
         let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(30.0, 42.0));
         buffer.set_size(
             &mut self.font_system,
-            (rect_pos.right - rect_pos.left) as f32,
-            (rect_pos.bottom - rect_pos.top) as f32,
+            (self.rectangle.position().right - self.rectangle.position().left) as f32,
+            (self.rectangle.position().bottom - self.rectangle.position().top) as f32,
         );
         buffer.set_text(
             &mut self.font_system,
@@ -316,17 +310,19 @@ impl<'window> State<'window> {
                     height: self.size.height,
                 },
                 [TextArea {
+                    // TODO: move text to rectangle
                     buffer: &buffer,
-                    left: rect_pos.left as f32,
-                    // 400 - (400-100)/2
-                    top: ((rect_pos.bottom - (rect_pos.bottom - rect_pos.top) / 2) as f32
+                    left: self.rectangle.position().left as f32,
+                    top: ((self.rectangle.position().bottom
+                        - (self.rectangle.position().bottom - self.rectangle.position().top) / 2)
+                        as f32
                         - (buffer.metrics().line_height / 2.0)),
                     scale: 1.0,
                     bounds: TextBounds {
-                        left: rect_pos.left as i32,
-                        top: rect_pos.top as i32,
-                        right: rect_pos.right as i32,
-                        bottom: rect_pos.bottom as i32,
+                        left: self.rectangle.position().left as i32,
+                        top: self.rectangle.position().top as i32,
+                        right: self.rectangle.position().right as i32,
+                        bottom: self.rectangle.position().bottom as i32,
                     },
                     default_color: Color::rgb(255, 255, 255),
                 }],
@@ -359,12 +355,10 @@ impl<'window> State<'window> {
                 occlusion_query_set: None,
             });
 
-            // TODO: color change
-
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..rectangle.num_indices(), 0, 0..1);
+            render_pass.draw_indexed(0..self.rectangle.num_indices(), 0, 0..1);
             self.text_renderer
                 .render(&self.text_atlas, &mut render_pass)
                 .unwrap();
