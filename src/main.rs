@@ -1,7 +1,4 @@
-use glyphon::{
-    Attrs, Buffer, Color, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache, TextArea,
-    TextAtlas, TextBounds, TextRenderer,
-};
+use glyphon::{Color, FontSystem, Resolution, SwashCache, TextArea, TextAtlas, TextRenderer};
 use rectangle::*;
 use std::time::SystemTime;
 use wgpu::util::DeviceExt;
@@ -15,6 +12,7 @@ use winit::{
 };
 
 mod rectangle;
+mod text;
 
 #[repr(C)]
 #[derive(Clone, Debug, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -284,22 +282,11 @@ impl<'window> State<'window> {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(30.0, 42.0));
-        buffer.set_size(
+        let txt = text::Text::new(
             &mut self.font_system,
-            (self.rectangle.position().right - self.rectangle.position().left) as f32,
-            (self.rectangle.position().bottom - self.rectangle.position().top) as f32,
-        );
-        buffer.set_text(
-            &mut self.font_system,
+            self.rectangle.position().to_owned(),
             "Submit 🚀",
-            Attrs::new().family(Family::SansSerif),
-            Shaping::Advanced,
         );
-        buffer.lines.iter_mut().for_each(|line| {
-            line.set_align(Some(glyphon::cosmic_text::Align::Center));
-        });
-        buffer.shape_until_scroll(&mut self.font_system);
 
         self.text_renderer
             .prepare(
@@ -313,19 +300,11 @@ impl<'window> State<'window> {
                 },
                 [TextArea {
                     // TODO: move text to rectangle
-                    buffer: &buffer,
+                    buffer: txt.buffer(),
                     left: self.rectangle.position().left as f32,
-                    top: ((self.rectangle.position().bottom
-                        - (self.rectangle.position().bottom - self.rectangle.position().top) / 2)
-                        as f32
-                        - (buffer.metrics().line_height / 2.0)),
+                    top: txt.top(),
                     scale: 1.0,
-                    bounds: TextBounds {
-                        left: self.rectangle.position().left as i32,
-                        top: self.rectangle.position().top as i32,
-                        right: self.rectangle.position().right as i32,
-                        bottom: self.rectangle.position().bottom as i32,
-                    },
+                    bounds: txt.bounds(),
                     default_color: Color::rgb(255, 255, 255),
                 }],
                 &mut self.text_cache,

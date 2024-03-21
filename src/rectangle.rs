@@ -1,6 +1,7 @@
 use crate::Vertex;
 use winit::dpi::PhysicalPosition;
 
+#[derive(Copy, Clone)]
 pub struct RectPos {
     pub top: u32,
     pub left: u32,
