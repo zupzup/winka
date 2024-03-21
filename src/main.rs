@@ -11,6 +11,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+mod button;
 mod rectangle;
 mod text;
 
@@ -69,8 +70,7 @@ struct State<'window> {
     text_atlas: TextAtlas,
     text_cache: SwashCache,
     font_system: FontSystem,
-    rectangle: Rectangle,
-    text: text::Text,
+    button: button::Button,
 }
 
 impl<'window> State<'window> {
@@ -170,24 +170,26 @@ impl<'window> State<'window> {
             multiview: None,
         });
 
-        let rectangle = Rectangle::new(
-            RectPos {
-                top: 100,
-                left: 100,
-                bottom: 400,
-                right: 500,
-            },
-            [0.5, 0.0, 0.5],
-            [1.0, 0.0, 1.0],
-            [0.0, 0.0, 0.0],
-            [1.0, 1.0, 1.0],
-        );
-
-        let text = text::Text::new(
-            &mut font_system,
-            rectangle.position().to_owned(),
-            "Submit 🚀",
-            Color::rgb(255, 255, 255),
+        let rect_pos = RectPos {
+            top: 100,
+            left: 100,
+            bottom: 400,
+            right: 500,
+        };
+        let button = button::Button::new(
+            Rectangle::new(
+                rect_pos,
+                [0.5, 0.0, 0.5],
+                [1.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0],
+                [1.0, 1.0, 1.0],
+            ),
+            text::Text::new(
+                &mut font_system,
+                rect_pos,
+                "Submit 🚀",
+                Color::rgb(255, 255, 255),
+            ),
         );
 
         Self {
@@ -205,8 +207,7 @@ impl<'window> State<'window> {
             text_cache,
             text_renderer,
             font_system,
-            rectangle,
-            text,
+            button,
         }
     }
 
@@ -275,7 +276,7 @@ impl<'window> State<'window> {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(&self.rectangle.vertices(
+                contents: bytemuck::cast_slice(&self.button.rectangle().vertices(
                     self.mouse_coords,
                     self.clicked,
                     self.size,
@@ -287,7 +288,7 @@ impl<'window> State<'window> {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(&self.rectangle.indices()),
+                contents: bytemuck::cast_slice(&self.button.rectangle().indices()),
                 usage: wgpu::BufferUsages::INDEX,
             });
 
@@ -301,7 +302,7 @@ impl<'window> State<'window> {
                     width: self.size.width,
                     height: self.size.height,
                 },
-                [self.text.text_area()],
+                [self.button.text().text_area()],
                 &mut self.text_cache,
             )
             .unwrap();
@@ -334,7 +335,7 @@ impl<'window> State<'window> {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.rectangle.num_indices(), 0, 0..1);
+            render_pass.draw_indexed(0..self.button.rectangle().num_indices(), 0, 0..1);
             self.text_renderer
                 .render(&self.text_atlas, &mut render_pass)
                 .unwrap();

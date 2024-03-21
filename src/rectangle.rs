@@ -34,10 +34,6 @@ impl Rectangle {
         }
     }
 
-    pub fn position(&self) -> &RectPos {
-        &self.position
-    }
-
     pub fn vertices(
         &mut self,
         mouse_coords: PhysicalPosition<f64>,
