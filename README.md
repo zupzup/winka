@@ -23,7 +23,7 @@
 
 ## TODO
 
-* refactor to `Button`
+* SIMPLIFY WGPU code, refactor button
 * Create a separate text input field
     * on click, it's active - different border color
     * if it's active and text is input, it shows in the text field
