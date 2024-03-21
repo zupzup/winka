@@ -11,14 +11,24 @@ pub struct RectPos {
 pub struct Rectangle {
     position: RectPos,
     color: [f32; 3],
+    color_hover: [f32; 3],
     border_color: [f32; 3],
+    border_color_clicked: [f32; 3],
 }
 
 impl Rectangle {
-    pub fn new(position: RectPos, color: [f32; 3], border_color: [f32; 3]) -> Self {
+    pub fn new(
+        position: RectPos,
+        color: [f32; 3],
+        color_hover: [f32; 3],
+        border_color: [f32; 3],
+        border_color_clicked: [f32; 3],
+    ) -> Self {
         Self {
             color,
+            color_hover,
             border_color,
+            border_color_clicked,
             position,
         }
     }
@@ -53,9 +63,9 @@ impl Rectangle {
             && mouse_coords.y > self.position.top as f64
             && mouse_coords.y < self.position.bottom as f64
         {
-            color = [1.0, 0.0, 1.0];
+            color = self.color_hover;
             if clicked {
-                border_color = [1.0, 1.0, 1.0];
+                border_color = self.border_color_clicked;
             }
         }
 
