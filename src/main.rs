@@ -1,4 +1,4 @@
-use glyphon::{Color, FontSystem, Resolution, SwashCache, TextArea, TextAtlas, TextRenderer};
+use glyphon::{Color, FontSystem, Resolution, SwashCache, TextAtlas, TextRenderer};
 use rectangle::*;
 use std::time::SystemTime;
 use wgpu::util::DeviceExt;
@@ -70,6 +70,7 @@ struct State<'window> {
     text_cache: SwashCache,
     font_system: FontSystem,
     rectangle: Rectangle,
+    text: text::Text,
 }
 
 impl<'window> State<'window> {
@@ -112,7 +113,7 @@ impl<'window> State<'window> {
 
         surface.configure(&device, &config);
 
-        let font_system = FontSystem::new();
+        let mut font_system = FontSystem::new();
         let text_cache = SwashCache::new();
         let mut text_atlas = TextAtlas::new(&device, &queue, swapchain_format);
         let text_renderer = TextRenderer::new(
@@ -182,6 +183,13 @@ impl<'window> State<'window> {
             [1.0, 1.0, 1.0],
         );
 
+        let text = text::Text::new(
+            &mut font_system,
+            rectangle.position().to_owned(),
+            "Submit 🚀",
+            Color::rgb(255, 255, 255),
+        );
+
         Self {
             window,
             surface,
@@ -198,6 +206,7 @@ impl<'window> State<'window> {
             text_renderer,
             font_system,
             rectangle,
+            text,
         }
     }
 
@@ -282,12 +291,6 @@ impl<'window> State<'window> {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        let txt = text::Text::new(
-            &mut self.font_system,
-            self.rectangle.position().to_owned(),
-            "Submit 🚀",
-        );
-
         self.text_renderer
             .prepare(
                 &self.device,
@@ -298,15 +301,7 @@ impl<'window> State<'window> {
                     width: self.size.width,
                     height: self.size.height,
                 },
-                [TextArea {
-                    // TODO: move text to rectangle
-                    buffer: txt.buffer(),
-                    left: self.rectangle.position().left as f32,
-                    top: txt.top(),
-                    scale: 1.0,
-                    bounds: txt.bounds(),
-                    default_color: Color::rgb(255, 255, 255),
-                }],
+                [self.text.text_area()],
                 &mut self.text_cache,
             )
             .unwrap();

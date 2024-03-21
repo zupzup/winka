@@ -1,13 +1,14 @@
 use crate::rectangle::RectPos;
-use glyphon::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, TextBounds};
+use glyphon::{Attrs, Buffer, Color, Family, FontSystem, Metrics, Shaping, TextArea, TextBounds};
 
 pub struct Text {
     buffer: Buffer,
     rect_pos: RectPos,
+    color: Color,
 }
 
 impl Text {
-    pub fn new(font_system: &mut FontSystem, rect_pos: RectPos, text: &str) -> Self {
+    pub fn new(font_system: &mut FontSystem, rect_pos: RectPos, text: &str, color: Color) -> Self {
         let mut buffer = Buffer::new(font_system, Metrics::new(30.0, 42.0));
         buffer.set_size(
             font_system,
@@ -24,24 +25,35 @@ impl Text {
             line.set_align(Some(glyphon::cosmic_text::Align::Center));
         });
         buffer.shape_until_scroll(font_system);
-        Self { buffer, rect_pos }
+        Self {
+            buffer,
+            rect_pos,
+            color,
+        }
     }
 
-    pub fn buffer(&self) -> &Buffer {
-        &self.buffer
-    }
-
-    pub fn top(&self) -> f32 {
+    fn top(&self) -> f32 {
         (self.rect_pos.bottom - (self.rect_pos.bottom - self.rect_pos.top) / 2) as f32
             - (self.buffer.metrics().line_height / 2.0)
     }
 
-    pub fn bounds(&self) -> TextBounds {
+    fn bounds(&self) -> TextBounds {
         TextBounds {
             left: self.rect_pos.left as i32,
             top: self.rect_pos.top as i32,
             right: self.rect_pos.right as i32,
             bottom: self.rect_pos.bottom as i32,
+        }
+    }
+
+    pub fn text_area(&self) -> TextArea {
+        TextArea {
+            buffer: &self.buffer,
+            left: self.rect_pos.left as f32,
+            top: self.top(),
+            scale: 1.0,
+            bounds: self.bounds(),
+            default_color: self.color,
         }
     }
 }
