@@ -1,6 +1,7 @@
 use crate::rectangle::RectPos;
 use glyphon::{Attrs, Buffer, Color, Family, FontSystem, Metrics, Shaping, TextArea, TextBounds};
 
+#[derive(Debug)]
 pub struct Text {
     buffer: Buffer,
     rect_pos: RectPos,

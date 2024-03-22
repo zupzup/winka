@@ -170,26 +170,22 @@ impl<'window> State<'window> {
             multiview: None,
         });
 
-        let rect_pos = RectPos {
-            top: 100,
-            left: 100,
-            bottom: 400,
-            right: 500,
-        };
         let button = button::Button::new(
-            Rectangle::new(
-                rect_pos,
-                [0.5, 0.0, 0.5],
-                [1.0, 0.0, 1.0],
-                [0.0, 0.0, 0.0],
-                [1.0, 1.0, 1.0],
-            ),
-            text::Text::new(
-                &mut font_system,
-                rect_pos,
-                "Submit 🚀",
-                Color::rgb(255, 255, 255),
-            ),
+            button::ButtonConfig {
+                rect_pos: RectPos {
+                    top: 100,
+                    left: 100,
+                    bottom: 400,
+                    right: 500,
+                },
+                fill_color: [0.5, 0.0, 0.5],
+                fill_color_hover: [1.0, 0.0, 1.0],
+                border_color: [0.0, 0.0, 0.0],
+                border_color_clicked: [1.0, 1.0, 1.0],
+                text: "Submit 🚀",
+                text_color: Color::rgb(255, 255, 255),
+            },
+            &mut font_system,
         );
 
         Self {
@@ -336,6 +332,7 @@ impl<'window> State<'window> {
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
             render_pass.draw_indexed(0..self.button.rectangle().num_indices(), 0, 0..1);
+
             self.text_renderer
                 .render(&self.text_atlas, &mut render_pass)
                 .unwrap();
@@ -366,6 +363,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let mut then = SystemTime::now();
     let mut now = SystemTime::now();
     let mut fps = 0;
+
     event_loop
         .run(move |event, elwt| match event {
             Event::WindowEvent { window_id, event }
