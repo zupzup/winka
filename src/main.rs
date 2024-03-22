@@ -91,7 +91,7 @@ impl<'window> State<'window> {
                 compatible_surface: Some(&surface),
             })
             .await
-            .expect("can create device");
+            .expect("can create adapter");
 
         let (device, queue) = adapter
             .request_device(
@@ -267,7 +267,7 @@ impl<'window> State<'window> {
 
     fn update(&mut self) {}
 
-    fn render(&mut self, color: wgpu::Color) -> Result<(), wgpu::SurfaceError> {
+    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -319,7 +319,12 @@ impl<'window> State<'window> {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(color),
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 1.0,
+                            g: 1.0,
+                            b: 1.0,
+                            a: 1.0,
+                        }),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
@@ -375,16 +380,8 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         state.resize(physical_size);
                     }
                     WindowEvent::RedrawRequested => {
-                        let blue = state.mouse_coords.x / state.size.width as f64;
-                        let red = state.mouse_coords.y / state.size.height as f64;
-                        let color = wgpu::Color {
-                            r: red,
-                            g: red * blue,
-                            b: blue,
-                            a: 1.0,
-                        };
                         state.update();
-                        match state.render(color) {
+                        match state.render() {
                             Ok(_) => {}
                             Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
                             Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
