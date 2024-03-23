@@ -25,7 +25,7 @@
 
 * only load 1 custom font
     * https://github.com/iced-rs/iced/blob/3013463baa71504488a20436beb3db87ecb66df0/graphics/src/text.rs
-* try to render a second rectangle at the same time
+* Refactor to Components enum
 * Create a separate text input field
     * on click, it's active - different border color
     * if it's active and text is input, it shows in the text field

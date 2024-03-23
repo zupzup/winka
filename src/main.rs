@@ -24,6 +24,11 @@ struct Vertex {
     border_color: [f32; 3],
 }
 
+pub enum Component {
+    Button(button::Button),
+    Rect(rectangle::Rectangle),
+}
+
 impl Vertex {
     fn desc() -> wgpu::VertexBufferLayout<'static> {
         wgpu::VertexBufferLayout {
@@ -72,6 +77,7 @@ struct State<'window> {
     font_system: FontSystem,
     button: button::Button,
     button2: button::Button,
+    components: Vec<Component>,
 }
 
 impl<'window> State<'window> {
@@ -207,6 +213,10 @@ impl<'window> State<'window> {
             &mut font_system,
         );
 
+        // TODO refactor to components
+        // let components = vec![Component::Button(button), Component::Button(button2)];
+        let components = vec![];
+
         Self {
             window,
             surface,
@@ -224,6 +234,7 @@ impl<'window> State<'window> {
             font_system,
             button,
             button2,
+            components,
         }
     }
 
@@ -289,6 +300,7 @@ impl<'window> State<'window> {
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         // TODO: make this more efficient? and flexible maybe? refactor to ENUM
+        // TODO: refactor to components - match on components, if Button, do the thing below
         let vertices1 =
             self.button
                 .rectangle()
