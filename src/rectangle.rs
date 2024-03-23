@@ -106,8 +106,8 @@ impl Rectangle {
         ]
     }
 
-    pub fn indices(&self) -> [u16; 6] {
-        [0, 1, 2, 0, 2, 3]
+    pub fn indices(&self, base: u16) -> [u16; 6] {
+        [base, 1 + base, 2 + base, base, 2 + base, 3 + base]
     }
 
     pub fn num_indices(&self) -> u32 {

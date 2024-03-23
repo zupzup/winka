@@ -71,6 +71,7 @@ struct State<'window> {
     text_cache: SwashCache,
     font_system: FontSystem,
     button: button::Button,
+    button2: button::Button,
 }
 
 impl<'window> State<'window> {
@@ -188,6 +189,24 @@ impl<'window> State<'window> {
             &mut font_system,
         );
 
+        let button2 = button::Button::new(
+            button::ButtonConfig {
+                rect_pos: RectPos {
+                    top: 600,
+                    left: 600,
+                    bottom: 700,
+                    right: 800,
+                },
+                fill_color: [0.3, 0.0, 0.3],
+                fill_color_hover: [0.8, 0.0, 0.8],
+                border_color: [0.3, 0.3, 0.3],
+                border_color_clicked: [0.1, 0.1, 0.1],
+                text: "Button! 🚀",
+                text_color: Color::rgb(122, 122, 122),
+            },
+            &mut font_system,
+        );
+
         Self {
             window,
             surface,
@@ -204,6 +223,7 @@ impl<'window> State<'window> {
             text_renderer,
             font_system,
             button,
+            button2,
         }
     }
 
@@ -268,23 +288,34 @@ impl<'window> State<'window> {
     fn update(&mut self) {}
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        // TODO: make this more efficient? and flexible maybe? refactor to ENUM
+        let vertices1 =
+            self.button
+                .rectangle()
+                .vertices(self.mouse_coords, self.clicked, self.size);
+        let vertices2 =
+            self.button2
+                .rectangle()
+                .vertices(self.mouse_coords, self.clicked, self.size);
+        let vertices: Vec<Vertex> = vertices1.into_iter().chain(vertices2).collect();
+
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(&self.button.rectangle().vertices(
-                    self.mouse_coords,
-                    self.clicked,
-                    self.size,
-                )),
+                contents: bytemuck::cast_slice(vertices.as_slice()),
                 usage: wgpu::BufferUsages::VERTEX,
             });
+
+        let indices1 = self.button.rectangle().indices(0);
+        let indices2 = self.button2.rectangle().indices((vertices1.len()) as u16);
+        let indices: Vec<u16> = indices1.into_iter().chain(indices2).collect();
 
         let index_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(&self.button.rectangle().indices()),
+                contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
 
@@ -298,7 +329,10 @@ impl<'window> State<'window> {
                     width: self.size.width,
                     height: self.size.height,
                 },
-                [self.button.text().text_area()],
+                [
+                    self.button.text().text_area(),
+                    self.button2.text().text_area(),
+                ],
                 &mut self.text_cache,
             )
             .unwrap();
@@ -336,7 +370,11 @@ impl<'window> State<'window> {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.button.rectangle().num_indices(), 0, 0..1);
+            render_pass.draw_indexed(
+                0..(self.button.rectangle().num_indices() + self.button2.rectangle().num_indices()),
+                0,
+                0..1,
+            );
 
             self.text_renderer
                 .render(&self.text_atlas, &mut render_pass)
