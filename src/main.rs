@@ -1,4 +1,4 @@
-use glyphon::{Color, FontSystem, Resolution, SwashCache, TextAtlas, TextRenderer};
+use glyphon::{Color, FontSystem, Resolution, SwashCache, TextArea, TextAtlas, TextRenderer};
 use rectangle::*;
 use std::time::SystemTime;
 use wgpu::util::DeviceExt;
@@ -26,7 +26,6 @@ pub struct Vertex {
 
 pub enum Component {
     Button(button::Button),
-    Rect(rectangle::Rectangle),
 }
 
 impl Vertex {
@@ -301,16 +300,21 @@ impl<'window> State<'window> {
     fn update(&mut self) {}
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let mut text_areas: Vec<TextArea> = Vec::new();
+        let mut vertices: Vec<Vertex> = Vec::new();
+        let mut indices: Vec<u16> = Vec::new();
+
         // TODO: make this more efficient? and flexible maybe? refactor to ENUM
         // TODO: refactor to components - match on components, if Button, do the thing below
         let button_1_active = self.button.is_hovered(self.mouse_coords);
-        let vertices1 = self.button.rectangle().vertices(button_1_active, self.size);
         let button_2_active = self.button2.is_hovered(self.mouse_coords);
-        let vertices2 = self
-            .button2
-            .rectangle()
-            .vertices(button_2_active, self.size);
-        let vertices: Vec<Vertex> = vertices1.into_iter().chain(vertices2).collect();
+        vertices.extend_from_slice(&self.button.rectangle().vertices(button_1_active, self.size));
+        vertices.extend_from_slice(
+            &self
+                .button2
+                .rectangle()
+                .vertices(button_2_active, self.size),
+        );
 
         let vertex_buffer = self
             .device
@@ -320,9 +324,19 @@ impl<'window> State<'window> {
                 usage: wgpu::BufferUsages::VERTEX,
             });
 
-        let indices1 = self.button.rectangle().indices(0);
-        let indices2 = self.button2.rectangle().indices((vertices1.len()) as u16);
-        let indices: Vec<u16> = indices1.into_iter().chain(indices2).collect();
+        indices.extend_from_slice(&self.button.rectangle().indices(0));
+        indices.extend_from_slice(&self.button2.rectangle().indices(4));
+
+        text_areas.push(
+            self.button
+                .text()
+                .text_area(button_1_active && self.clicked),
+        );
+        text_areas.push(
+            self.button2
+                .text()
+                .text_area(button_2_active && self.clicked),
+        );
 
         let index_buffer = self
             .device
@@ -342,14 +356,7 @@ impl<'window> State<'window> {
                     width: self.size.width,
                     height: self.size.height,
                 },
-                [
-                    self.button
-                        .text()
-                        .text_area(button_1_active && self.clicked),
-                    self.button2
-                        .text()
-                        .text_area(button_2_active && self.clicked),
-                ],
+                text_areas,
                 &mut self.text_cache,
             )
             .unwrap();
