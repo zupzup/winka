@@ -17,7 +17,7 @@ mod text;
 
 #[repr(C)]
 #[derive(Clone, Debug, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
+pub struct Vertex {
     position: [f32; 3],
     color: [f32; 3],
     rect: [f32; 4],
@@ -186,11 +186,12 @@ impl<'window> State<'window> {
                     right: 500,
                 },
                 fill_color: [0.5, 0.0, 0.5],
-                fill_color_hover: [1.0, 0.0, 1.0],
+                fill_color_active: [1.0, 0.0, 1.0],
                 border_color: [0.0, 0.0, 0.0],
-                border_color_clicked: [1.0, 1.0, 1.0],
+                border_color_active: [1.0, 1.0, 1.0],
                 text: "Submit 🚀",
-                text_color: Color::rgb(255, 255, 255),
+                text_color: Color::rgb(200, 200, 200),
+                text_color_active: Color::rgb(255, 255, 255),
             },
             &mut font_system,
         );
@@ -204,11 +205,12 @@ impl<'window> State<'window> {
                     right: 800,
                 },
                 fill_color: [0.3, 0.0, 0.3],
-                fill_color_hover: [0.8, 0.0, 0.8],
+                fill_color_active: [0.8, 0.0, 0.8],
                 border_color: [0.3, 0.3, 0.3],
-                border_color_clicked: [0.1, 0.1, 0.1],
+                border_color_active: [0.1, 0.1, 0.1],
                 text: "Button! 🚀",
-                text_color: Color::rgb(122, 122, 122),
+                text_color: Color::rgb(200, 200, 200),
+                text_color_active: Color::rgb(255, 255, 255),
             },
             &mut font_system,
         );
@@ -301,14 +303,13 @@ impl<'window> State<'window> {
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         // TODO: make this more efficient? and flexible maybe? refactor to ENUM
         // TODO: refactor to components - match on components, if Button, do the thing below
-        let vertices1 =
-            self.button
-                .rectangle()
-                .vertices(self.mouse_coords, self.clicked, self.size);
-        let vertices2 =
-            self.button2
-                .rectangle()
-                .vertices(self.mouse_coords, self.clicked, self.size);
+        let button_1_active = self.button.is_hovered(self.mouse_coords);
+        let vertices1 = self.button.rectangle().vertices(button_1_active, self.size);
+        let button_2_active = self.button2.is_hovered(self.mouse_coords);
+        let vertices2 = self
+            .button2
+            .rectangle()
+            .vertices(button_2_active, self.size);
         let vertices: Vec<Vertex> = vertices1.into_iter().chain(vertices2).collect();
 
         let vertex_buffer = self
@@ -342,8 +343,12 @@ impl<'window> State<'window> {
                     height: self.size.height,
                 },
                 [
-                    self.button.text().text_area(),
-                    self.button2.text().text_area(),
+                    self.button
+                        .text()
+                        .text_area(button_1_active && self.clicked),
+                    self.button2
+                        .text()
+                        .text_area(button_2_active && self.clicked),
                 ],
                 &mut self.text_cache,
             )

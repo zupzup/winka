@@ -6,10 +6,17 @@ pub struct Text {
     buffer: Buffer,
     rect_pos: RectPos,
     color: Color,
+    color_active: Color,
 }
 
 impl Text {
-    pub fn new(font_system: &mut FontSystem, rect_pos: RectPos, text: &str, color: Color) -> Self {
+    pub fn new(
+        font_system: &mut FontSystem,
+        rect_pos: RectPos,
+        text: &str,
+        color: Color,
+        color_active: Color,
+    ) -> Self {
         let mut buffer = Buffer::new(font_system, Metrics::new(30.0, 42.0));
         buffer.set_size(
             font_system,
@@ -30,6 +37,7 @@ impl Text {
             buffer,
             rect_pos,
             color,
+            color_active,
         }
     }
 
@@ -47,14 +55,18 @@ impl Text {
         }
     }
 
-    pub fn text_area(&self) -> TextArea {
+    pub fn text_area(&self, is_active: bool) -> TextArea {
         TextArea {
             buffer: &self.buffer,
             left: self.rect_pos.left as f32,
             top: self.top(),
             scale: 1.0,
             bounds: self.bounds(),
-            default_color: self.color,
+            default_color: if is_active {
+                self.color_active
+            } else {
+                self.color
+            },
         }
     }
 }

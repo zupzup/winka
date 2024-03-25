@@ -1,5 +1,4 @@
 use crate::Vertex;
-use winit::dpi::PhysicalPosition;
 
 #[derive(Copy, Clone, Debug)]
 pub struct RectPos {
@@ -13,32 +12,35 @@ pub struct RectPos {
 pub struct Rectangle {
     position: RectPos,
     color: [f32; 3],
-    color_hover: [f32; 3],
+    color_active: [f32; 3],
     border_color: [f32; 3],
-    border_color_clicked: [f32; 3],
+    border_color_active: [f32; 3],
 }
 
 impl Rectangle {
     pub fn new(
         position: RectPos,
         color: [f32; 3],
-        color_hover: [f32; 3],
+        color_active: [f32; 3],
         border_color: [f32; 3],
-        border_color_clicked: [f32; 3],
+        border_color_active: [f32; 3],
     ) -> Self {
         Self {
             color,
-            color_hover,
+            color_active,
             border_color,
-            border_color_clicked,
+            border_color_active,
             position,
         }
     }
 
+    pub fn position(&self) -> RectPos {
+        self.position
+    }
+
     pub fn vertices(
         &mut self,
-        mouse_coords: PhysicalPosition<f64>,
-        clicked: bool,
+        is_active: bool,
         size: winit::dpi::PhysicalSize<u32>,
     ) -> [Vertex; 4] {
         // TODO: memoize these calculations for size
@@ -56,15 +58,9 @@ impl Rectangle {
         let mut color = self.color;
         let mut border_color = self.border_color;
 
-        if mouse_coords.x > self.position.left as f64
-            && mouse_coords.x < self.position.right as f64
-            && mouse_coords.y > self.position.top as f64
-            && mouse_coords.y < self.position.bottom as f64
-        {
-            color = self.color_hover;
-            if clicked {
-                border_color = self.border_color_clicked;
-            }
+        if is_active {
+            color = self.color_active;
+            border_color = self.border_color_active;
         }
 
         //  -1, 1    1,1
