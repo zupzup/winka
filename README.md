@@ -23,12 +23,11 @@
 
 ## TODO
 
-* only load 1 custom font
-    * https://github.com/iced-rs/iced/blob/3013463baa71504488a20436beb3db87ecb66df0/graphics/src/text.rs
-* Refactor to Components enum
 * Create a separate text input field
     * on click, it's active - different border color
     * if it's active and text is input, it shows in the text field
     * Create a blinking cursor within it
 * Create "success" notification on clicking submit with the entered text
+* only load 1 custom font
+    * https://github.com/iced-rs/iced/blob/3013463baa71504488a20436beb3db87ecb66df0/graphics/src/text.rs
 

@@ -74,8 +74,6 @@ struct State<'window> {
     text_atlas: TextAtlas,
     text_cache: SwashCache,
     font_system: FontSystem,
-    button: button::Button,
-    button2: button::Button,
     components: Vec<Component>,
 }
 
@@ -214,9 +212,30 @@ impl<'window> State<'window> {
             &mut font_system,
         );
 
-        // TODO refactor to components
-        // let components = vec![Component::Button(button), Component::Button(button2)];
-        let components = vec![];
+        let button3 = button::Button::new(
+            button::ButtonConfig {
+                rect_pos: RectPos {
+                    top: 300,
+                    left: 900,
+                    bottom: 400,
+                    right: 1000,
+                },
+                fill_color: [0.3, 0.0, 0.3],
+                fill_color_active: [0.8, 0.0, 0.8],
+                border_color: [0.3, 0.3, 0.3],
+                border_color_active: [0.1, 0.1, 0.1],
+                text: "3!",
+                text_color: Color::rgb(200, 200, 200),
+                text_color_active: Color::rgb(255, 255, 255),
+            },
+            &mut font_system,
+        );
+
+        let components = vec![
+            Component::Button(button),
+            Component::Button(button2),
+            Component::Button(button3),
+        ];
 
         Self {
             window,
@@ -233,8 +252,6 @@ impl<'window> State<'window> {
             text_cache,
             text_renderer,
             font_system,
-            button,
-            button2,
             components,
         }
     }
@@ -304,17 +321,24 @@ impl<'window> State<'window> {
         let mut vertices: Vec<Vertex> = Vec::new();
         let mut indices: Vec<u16> = Vec::new();
 
-        // TODO: make this more efficient? and flexible maybe? refactor to ENUM
-        // TODO: refactor to components - match on components, if Button, do the thing below
-        let button_1_active = self.button.is_hovered(self.mouse_coords);
-        let button_2_active = self.button2.is_hovered(self.mouse_coords);
-        vertices.extend_from_slice(&self.button.rectangle().vertices(button_1_active, self.size));
-        vertices.extend_from_slice(
-            &self
-                .button2
-                .rectangle()
-                .vertices(button_2_active, self.size),
-        );
+        let mut num_vertices = 0;
+        let mut num_indices = 0;
+        self.components
+            .iter_mut()
+            .for_each(|component| match component {
+                Component::Button(button) => {
+                    let button_active = button.is_hovered(self.mouse_coords);
+                    let button_vertices = button.rectangle().vertices(button_active, self.size);
+
+                    vertices.extend_from_slice(&button_vertices);
+                    indices.extend_from_slice(&button.rectangle().indices(num_vertices));
+
+                    num_vertices += button_vertices.len() as u16;
+                    num_indices += button.rectangle().num_indices();
+
+                    text_areas.push(button.text().text_area(button_active && self.clicked));
+                }
+            });
 
         let vertex_buffer = self
             .device
@@ -323,20 +347,6 @@ impl<'window> State<'window> {
                 contents: bytemuck::cast_slice(vertices.as_slice()),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-
-        indices.extend_from_slice(&self.button.rectangle().indices(0));
-        indices.extend_from_slice(&self.button2.rectangle().indices(4));
-
-        text_areas.push(
-            self.button
-                .text()
-                .text_area(button_1_active && self.clicked),
-        );
-        text_areas.push(
-            self.button2
-                .text()
-                .text_area(button_2_active && self.clicked),
-        );
 
         let index_buffer = self
             .device
@@ -394,11 +404,7 @@ impl<'window> State<'window> {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(
-                0..(self.button.rectangle().num_indices() + self.button2.rectangle().num_indices()),
-                0,
-                0..1,
-            );
+            render_pass.draw_indexed(0..(num_indices), 0, 0..1);
 
             self.text_renderer
                 .render(&self.text_atlas, &mut render_pass)
