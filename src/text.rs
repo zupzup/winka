@@ -41,6 +41,15 @@ impl Text {
         }
     }
 
+    fn set_text(&mut self, font_system: &mut FontSystem, text: String) {
+        self.buffer.set_text(
+            font_system,
+            &text,
+            Attrs::new().family(Family::SansSerif),
+            Shaping::Advanced,
+        );
+    }
+
     fn top(&self) -> f32 {
         (self.rect_pos.bottom - (self.rect_pos.bottom - self.rect_pos.top) / 2) as f32
             - (self.buffer.metrics().line_height / 2.0)

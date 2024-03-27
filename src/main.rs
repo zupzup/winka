@@ -14,6 +14,7 @@ use winit::{
 mod button;
 mod rectangle;
 mod text;
+mod text_field;
 
 #[repr(C)]
 #[derive(Clone, Debug, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -26,6 +27,7 @@ pub struct Vertex {
 
 pub enum Component {
     Button(button::Button),
+    TextField(text_field::TextField),
 }
 
 impl Vertex {
@@ -189,6 +191,9 @@ impl<'window> State<'window> {
                 text: "Submit 🚀",
                 text_color: Color::rgb(200, 200, 200),
                 text_color_active: Color::rgb(255, 255, 255),
+                on_click: || {
+                    println!("button 1 clicked");
+                },
             },
             &mut font_system,
         );
@@ -208,6 +213,7 @@ impl<'window> State<'window> {
                 text: "Button! 🚀",
                 text_color: Color::rgb(200, 200, 200),
                 text_color_active: Color::rgb(255, 255, 255),
+                on_click: || {},
             },
             &mut font_system,
         );
@@ -227,6 +233,7 @@ impl<'window> State<'window> {
                 text: "3!",
                 text_color: Color::rgb(200, 200, 200),
                 text_color_active: Color::rgb(255, 255, 255),
+                on_click: || {},
             },
             &mut font_system,
         );
@@ -338,6 +345,7 @@ impl<'window> State<'window> {
 
                     text_areas.push(button.text().text_area(button_active && self.clicked));
                 }
+                Component::TextField(_text_field) => {}
             });
 
         let vertex_buffer = self

@@ -12,6 +12,7 @@ pub struct ButtonConfig {
     pub text: &'static str,
     pub text_color: glyphon::Color,
     pub text_color_active: glyphon::Color,
+    pub on_click: fn(),
 }
 
 #[derive(Debug)]
