@@ -19,6 +19,7 @@ pub struct ButtonConfig {
 pub struct Button {
     text: Text,
     rectangle: Rectangle,
+    on_click: fn(),
 }
 
 impl Button {
@@ -38,6 +39,7 @@ impl Button {
                 cfg.text_color,
                 cfg.text_color_active,
             ),
+            on_click: cfg.on_click,
         }
     }
 
@@ -47,6 +49,10 @@ impl Button {
 
     pub fn rectangle(&mut self) -> &mut Rectangle {
         &mut self.rectangle
+    }
+
+    pub fn click(&mut self) {
+        (self.on_click)()
     }
 
     pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {

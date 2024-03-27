@@ -38,4 +38,16 @@ impl TextField {
             content: String::new(),
         }
     }
+
+    pub fn text(&self) -> &Text {
+        &self.text
+    }
+
+    pub fn rectangle(&mut self) -> &mut Rectangle {
+        &mut self.rectangle
+    }
+
+    pub fn content(&self) -> &str {
+        &self.content
+    }
 }

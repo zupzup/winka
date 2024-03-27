@@ -61,6 +61,11 @@ impl Vertex {
     }
 }
 
+struct InputState {
+    clicked: bool,
+    mouse_coords: PhysicalPosition<f64>,
+}
+
 struct State<'window> {
     surface: wgpu::Surface<'window>,
     device: wgpu::Device,
@@ -68,21 +73,23 @@ struct State<'window> {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     window: Window,
-    mouse_coords: PhysicalPosition<f64>,
     render_pipeline: wgpu::RenderPipeline,
-    use_color: bool,
-    clicked: bool,
     text_renderer: TextRenderer,
     text_atlas: TextAtlas,
     text_cache: SwashCache,
     font_system: FontSystem,
     components: Vec<Component>,
+    input_state: InputState,
 }
 
 impl<'window> State<'window> {
     async fn new(window: Window) -> State<'window> {
         let size = window.inner_size();
         let mouse_coords = PhysicalPosition { x: 0.0, y: 0.0 };
+        let input_state = InputState {
+            clicked: false,
+            mouse_coords,
+        };
 
         let instance = wgpu::Instance::default();
         let surface = unsafe {
@@ -251,15 +258,13 @@ impl<'window> State<'window> {
             queue,
             config,
             size,
-            mouse_coords,
             render_pipeline,
-            use_color: true,
-            clicked: false,
             text_atlas,
             text_cache,
             text_renderer,
             font_system,
             components,
+            input_state,
         }
     }
 
@@ -276,33 +281,44 @@ impl<'window> State<'window> {
         }
     }
 
+    fn handle_click(&mut self) {
+        self.components.iter_mut().for_each(|component| {
+            if let Component::Button(button) = component {
+                if button.is_hovered(self.input_state.mouse_coords) {
+                    button.click();
+                }
+            }
+        });
+    }
+
     fn input(&mut self, event: &WindowEvent, elwt: &EventLoopWindowTarget<()>) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
-                self.mouse_coords = position.to_owned();
+                self.input_state.mouse_coords = position.to_owned();
                 true
             }
             WindowEvent::MouseInput { state, button, .. } => match state {
                 ElementState::Pressed => {
-                    if button == &winit::event::MouseButton::Left {
-                        self.clicked = true;
+                    if button == &winit::event::MouseButton::Left && !self.input_state.clicked {
+                        self.input_state.clicked = true;
+                        self.handle_click();
                     }
                     log::info!(
                         "{button:?} mouse button pressed at {:?}, clicked: {}",
-                        self.mouse_coords,
-                        self.clicked
+                        self.input_state.mouse_coords,
+                        self.input_state.clicked
                     );
                     true
                 }
                 ElementState::Released => {
-                    if button == &winit::event::MouseButton::Left {
-                        self.clicked = false;
+                    if button == &winit::event::MouseButton::Left && self.input_state.clicked {
+                        self.input_state.clicked = false;
                     }
                     log::info!(
                         "{button:?} mouse button released at {:?}, size: {:?}, clicked: {}",
-                        self.mouse_coords,
+                        self.input_state.mouse_coords,
                         self.size,
-                        self.clicked
+                        self.input_state.clicked
                     );
                     true
                 }
@@ -311,7 +327,7 @@ impl<'window> State<'window> {
                 match event.key_without_modifiers().as_ref() {
                     Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
                     Key::Named(NamedKey::Space) => {
-                        self.use_color = event.state == ElementState::Released
+                        // TODO: implement handler
                     }
                     _ => (),
                 }
@@ -320,8 +336,6 @@ impl<'window> State<'window> {
             _ => false,
         }
     }
-
-    fn update(&mut self) {}
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let mut text_areas: Vec<TextArea> = Vec::new();
@@ -334,7 +348,7 @@ impl<'window> State<'window> {
             .iter_mut()
             .for_each(|component| match component {
                 Component::Button(button) => {
-                    let button_active = button.is_hovered(self.mouse_coords);
+                    let button_active = button.is_hovered(self.input_state.mouse_coords);
                     let button_vertices = button.rectangle().vertices(button_active, self.size);
 
                     vertices.extend_from_slice(&button_vertices);
@@ -343,7 +357,11 @@ impl<'window> State<'window> {
                     num_vertices += button_vertices.len() as u16;
                     num_indices += button.rectangle().num_indices();
 
-                    text_areas.push(button.text().text_area(button_active && self.clicked));
+                    text_areas.push(
+                        button
+                            .text()
+                            .text_area(button_active && self.input_state.clicked),
+                    );
                 }
                 Component::TextField(_text_field) => {}
             });
@@ -456,7 +474,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                         state.resize(physical_size);
                     }
                     WindowEvent::RedrawRequested => {
-                        state.update();
                         match state.render() {
                             Ok(_) => {}
                             Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
