@@ -1,5 +1,6 @@
 use crate::rectangle::{RectPos, Rectangle};
 use crate::text::Text;
+use glyphon::FontSystem;
 
 #[derive(Debug)]
 pub struct TextFieldConfig {
@@ -16,6 +17,7 @@ pub struct TextField {
     text: Text,
     rectangle: Rectangle,
     content: String,
+    active: bool,
 }
 
 impl TextField {
@@ -36,7 +38,23 @@ impl TextField {
                 cfg.text_color,
             ),
             content: String::new(),
+            active: false,
         }
+    }
+
+    pub fn set_text(&mut self, font_system: &mut FontSystem, text: &str) {
+        if self.active {
+            self.content = text.to_owned();
+            self.text.set_text(font_system, &self.content);
+        }
+    }
+
+    pub fn set_active(&mut self) {
+        self.active = true
+    }
+
+    pub fn set_inactive(&mut self) {
+        self.active = false
     }
 
     pub fn text(&self) -> &Text {

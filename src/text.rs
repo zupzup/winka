@@ -41,10 +41,10 @@ impl Text {
         }
     }
 
-    fn set_text(&mut self, font_system: &mut FontSystem, text: String) {
+    pub fn set_text(&mut self, font_system: &mut FontSystem, text: &str) {
         self.buffer.set_text(
             font_system,
-            &text,
+            text,
             Attrs::new().family(Family::SansSerif),
             Shaping::Advanced,
         );
