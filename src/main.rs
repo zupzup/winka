@@ -245,10 +245,28 @@ impl<'window> State<'window> {
             &mut font_system,
         );
 
+        let text_field = text_field::TextField::new(
+            text_field::TextFieldConfig {
+                rect_pos: RectPos {
+                    top: 10,
+                    left: 10,
+                    bottom: 90,
+                    right: 200,
+                },
+                fill_color: [0.9, 0.9, 0.9],
+                fill_color_active: [1.0, 1.0, 1.0],
+                border_color: [0.3, 0.3, 0.3],
+                border_color_active: [0.1, 0.1, 0.1],
+                text_color: Color::rgb(10, 10, 10),
+            },
+            &mut font_system,
+        );
+
         let components = vec![
             Component::Button(button),
             Component::Button(button2),
             Component::Button(button3),
+            Component::TextField(text_field),
         ];
 
         Self {
@@ -364,7 +382,24 @@ impl<'window> State<'window> {
                             .text_area(button_active && self.input_state.clicked),
                     );
                 }
-                Component::TextField(_text_field) => {}
+                Component::TextField(text_field) => {
+                    let text_field_active = true;
+                    let text_field_vertices = text_field
+                        .rectangle()
+                        .vertices(text_field_active, self.size);
+
+                    vertices.extend_from_slice(&text_field_vertices);
+                    indices.extend_from_slice(&text_field.rectangle().indices(num_vertices));
+
+                    num_vertices += text_field_vertices.len() as u16;
+                    num_indices += text_field.rectangle().num_indices();
+
+                    text_areas.push(
+                        text_field
+                            .text()
+                            .text_area(text_field_active && self.input_state.clicked),
+                    );
+                }
             });
 
         let vertex_buffer = self
