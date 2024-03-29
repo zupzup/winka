@@ -324,6 +324,7 @@ impl<'window> State<'window> {
                 }
             },
             WindowEvent::KeyboardInput { event, .. } => {
+                // TODO: if text field is active, add text there
                 match event.key_without_modifiers().as_ref() {
                     Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
                     Key::Named(NamedKey::Space) => {
