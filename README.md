@@ -26,6 +26,8 @@
 * Create a separate text input field
     * if it's active and text is input, it shows in the text field
     * Create a blinking cursor within it
+        * https://github.com/emilk/egui/blob/master/crates/egui/src/widgets/text_edit/builder.rs
+        * https://github.com/emilk/egui/blob/master/crates/epaint/src/text/cursor.rs
 * Create "success" notification on clicking submit with the entered text
 * Refactor fontsystem to use global (once cell, arc, lock)
 * only load 1 custom font
