@@ -24,7 +24,6 @@
 ## TODO
 
 * Create a separate text input field
-    * on click, it's active - different border color
     * if it's active and text is input, it shows in the text field
     * Create a blinking cursor within it
 * Create "success" notification on clicking submit with the entered text
