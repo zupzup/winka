@@ -1,6 +1,7 @@
 use crate::rectangle::{RectPos, Rectangle};
 use crate::text::Text;
 use glyphon::FontSystem;
+use winit::dpi::PhysicalPosition;
 
 #[derive(Debug)]
 pub struct TextFieldConfig {
@@ -49,6 +50,10 @@ impl TextField {
         }
     }
 
+    pub fn is_active(&self) -> bool {
+        self.active
+    }
+
     pub fn set_active(&mut self) {
         self.active = true
     }
@@ -67,5 +72,9 @@ impl TextField {
 
     pub fn content(&self) -> &str {
         &self.content
+    }
+
+    pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {
+        self.rectangle.is_hovered(mouse_coords)
     }
 }

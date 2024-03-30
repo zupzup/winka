@@ -56,10 +56,6 @@ impl Button {
     }
 
     pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {
-        let rect_pos = self.rectangle.position();
-        mouse_coords.x > rect_pos.left as f64
-            && mouse_coords.x < rect_pos.right as f64
-            && mouse_coords.y > rect_pos.top as f64
-            && mouse_coords.y < rect_pos.bottom as f64
+        self.rectangle.is_hovered(mouse_coords)
     }
 }

@@ -1,4 +1,5 @@
 use crate::Vertex;
+use winit::dpi::PhysicalPosition;
 
 #[derive(Copy, Clone, Debug)]
 pub struct RectPos {
@@ -108,5 +109,13 @@ impl Rectangle {
 
     pub fn num_indices(&self) -> u32 {
         6
+    }
+
+    pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {
+        let rect_pos = self.position;
+        mouse_coords.x > rect_pos.left as f64
+            && mouse_coords.x < rect_pos.right as f64
+            && mouse_coords.y > rect_pos.top as f64
+            && mouse_coords.y < rect_pos.bottom as f64
     }
 }

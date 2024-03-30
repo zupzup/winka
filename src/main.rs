@@ -300,13 +300,22 @@ impl<'window> State<'window> {
     }
 
     fn handle_click(&mut self) {
-        self.components.iter_mut().for_each(|component| {
-            if let Component::Button(button) = component {
-                if button.is_hovered(self.input_state.mouse_coords) {
-                    button.click();
+        self.components
+            .iter_mut()
+            .for_each(|component| match component {
+                Component::Button(button) => {
+                    if button.is_hovered(self.input_state.mouse_coords) {
+                        button.click();
+                    }
                 }
-            }
-        });
+                Component::TextField(text_field) => {
+                    if text_field.is_hovered(self.input_state.mouse_coords) {
+                        text_field.set_active();
+                    } else {
+                        text_field.set_inactive();
+                    }
+                }
+            });
     }
 
     fn input(&mut self, event: &WindowEvent, elwt: &EventLoopWindowTarget<()>) -> bool {
@@ -383,7 +392,7 @@ impl<'window> State<'window> {
                     );
                 }
                 Component::TextField(text_field) => {
-                    let text_field_active = true;
+                    let text_field_active = text_field.is_active();
                     let text_field_vertices = text_field
                         .rectangle()
                         .vertices(text_field_active, self.size);
