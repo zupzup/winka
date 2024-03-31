@@ -351,9 +351,28 @@ impl<'window> State<'window> {
                 }
             },
             WindowEvent::KeyboardInput { event, .. } => {
-                // TODO: if text field is active, add text there
+                let mut active_text_fields: Vec<&mut text_field::TextField> = self
+                    .components
+                    .iter_mut()
+                    .filter_map(|component| match component {
+                        Component::TextField(text_field) => {
+                            if text_field.is_active() {
+                                Some(text_field)
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    })
+                    .collect();
                 match event.key_without_modifiers().as_ref() {
-                    Key::Character("q") | Key::Named(NamedKey::Escape) => elwt.exit(),
+                    Key::Character(character) => {
+                        active_text_fields.iter_mut().for_each(|text_field| {
+                            text_field.set_text(&mut self.font_system, character);
+                            // TODO: append text
+                        });
+                    }
+                    Key::Named(NamedKey::Escape) => elwt.exit(),
                     Key::Named(NamedKey::Space) => {
                         // TODO: implement handler
                     }
