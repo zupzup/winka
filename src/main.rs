@@ -351,6 +351,10 @@ impl<'window> State<'window> {
                 }
             },
             WindowEvent::KeyboardInput { event, .. } => {
+                if let Key::Named(NamedKey::Escape) = event.key_without_modifiers() {
+                    elwt.exit()
+                }
+
                 self.components
                     .iter_mut()
                     .filter_map(|component| match component {
@@ -369,7 +373,7 @@ impl<'window> State<'window> {
                                 Key::Named(NamedKey::Backspace) => {
                                     text_field.remove_character(&mut self.font_system);
                                 }
-                                Key::Named(NamedKey::Escape) => elwt.exit(),
+                                Key::Named(NamedKey::Enter) => (),
                                 _ => {
                                     if let Some(ref txt) = event.text {
                                         text_field.add_text(&mut self.font_system, txt.as_str());
@@ -413,8 +417,9 @@ impl<'window> State<'window> {
                 Component::TextField(text_field) => {
                     let text_field_active = text_field.is_active();
                     let text_field_vertices = text_field
-                        .rectangle()
+                        .rectangle_mut()
                         .vertices(text_field_active, self.size);
+                    let cursor_vertices = text_field.get_cursor().vertices(false, self.size);
 
                     vertices.extend_from_slice(&text_field_vertices);
                     indices.extend_from_slice(&text_field.rectangle().indices(num_vertices));
@@ -422,7 +427,13 @@ impl<'window> State<'window> {
                     num_vertices += text_field_vertices.len() as u16;
                     num_indices += text_field.rectangle().num_indices();
 
-                    println!("text size: {:?}", text_field.text().get_size());
+                    if text_field_active {
+                        vertices.extend_from_slice(&cursor_vertices);
+                        indices.extend_from_slice(&text_field.get_cursor().indices(num_vertices));
+                        num_vertices += cursor_vertices.len() as u16;
+                        num_indices += text_field.get_cursor().num_indices();
+                    }
+
                     text_areas.push(
                         text_field
                             .text()

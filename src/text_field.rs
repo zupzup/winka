@@ -45,6 +45,24 @@ impl TextField {
         }
     }
 
+    pub fn get_cursor(&self) -> Rectangle {
+        let size = self.text.get_size();
+        let rect_pos = self.rectangle().position();
+        let left = rect_pos.left + size.width as u32 + 12;
+        Rectangle::new(
+            RectPos {
+                top: rect_pos.top + 10,
+                left,
+                right: left + 2,
+                bottom: rect_pos.bottom - 10,
+            },
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+        )
+    }
+
     pub fn add_text(&mut self, font_system: &mut FontSystem, text: &str) {
         if self.active {
             self.content.push_str(text);
@@ -75,7 +93,11 @@ impl TextField {
         &self.text
     }
 
-    pub fn rectangle(&mut self) -> &mut Rectangle {
+    pub fn rectangle(&self) -> &Rectangle {
+        &self.rectangle
+    }
+
+    pub fn rectangle_mut(&mut self) -> &mut Rectangle {
         &mut self.rectangle
     }
 

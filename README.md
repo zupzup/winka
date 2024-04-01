@@ -25,6 +25,7 @@
 
 * Create a separate text input field
     * Create a blinking cursor at the end of the text
+    * scroll field to the right on entering text
 * Create "success" notification on clicking submit with the entered text
 * Refactor fontsystem to use global (once cell, arc, lock)
 * refactor to not use booleans as fields and arguments, use enum types as arguments, or Option

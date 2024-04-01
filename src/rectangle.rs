@@ -44,7 +44,6 @@ impl Rectangle {
         is_active: bool,
         size: winit::dpi::PhysicalSize<u32>,
     ) -> [Vertex; 4] {
-        // TODO: memoize these calculations for size
         let top = 1.0 - (self.position.top as f32 / (size.height as f32 / 2.0));
         let left = (self.position.left as f32 / (size.width as f32 / 2.0)) - 1.0;
         let bottom = 1.0 - (self.position.bottom as f32 / (size.height as f32 / 2.0));
