@@ -1,6 +1,7 @@
 use crate::rectangle::{RectPos, Rectangle};
 use crate::text::Text;
 use glyphon::FontSystem;
+use std::time::SystemTime;
 use winit::dpi::PhysicalPosition;
 
 #[derive(Debug)]
@@ -19,6 +20,7 @@ pub struct TextField {
     rectangle: Rectangle,
     content: String,
     active: bool,
+    last_cursor_blink: Option<SystemTime>,
 }
 
 const PADDING: u32 = 10;
@@ -42,7 +44,16 @@ impl TextField {
             text: Text::new(font_system, padded_rect, "", cfg.text_color, cfg.text_color),
             content: String::new(),
             active: false,
+            last_cursor_blink: None,
         }
+    }
+
+    pub fn get_last_cursor_blink(&self) -> &Option<SystemTime> {
+        &self.last_cursor_blink
+    }
+
+    pub fn set_last_cursor_blink(&mut self) {
+        self.last_cursor_blink = Some(SystemTime::now());
     }
 
     pub fn get_cursor(&self) -> Rectangle {
@@ -82,11 +93,13 @@ impl TextField {
     }
 
     pub fn set_active(&mut self) {
-        self.active = true
+        self.active = true;
+        self.last_cursor_blink = Some(SystemTime::now());
     }
 
     pub fn set_inactive(&mut self) {
-        self.active = false
+        self.active = false;
+        self.last_cursor_blink = None;
     }
 
     pub fn text(&self) -> &Text {

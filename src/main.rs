@@ -419,7 +419,7 @@ impl<'window> State<'window> {
                     let text_field_vertices = text_field
                         .rectangle_mut()
                         .vertices(text_field_active, self.size);
-                    let cursor_vertices = text_field.get_cursor().vertices(false, self.size);
+                    let mut cursor = text_field.get_cursor();
 
                     vertices.extend_from_slice(&text_field_vertices);
                     indices.extend_from_slice(&text_field.rectangle().indices(num_vertices));
@@ -427,11 +427,21 @@ impl<'window> State<'window> {
                     num_vertices += text_field_vertices.len() as u16;
                     num_indices += text_field.rectangle().num_indices();
 
-                    if text_field_active {
+                    let now = SystemTime::now();
+                    if text_field_active
+                        && text_field.get_last_cursor_blink().is_some_and(|x| {
+                            if let Ok(duration) = x.duration_since(now) {
+                                return duration.as_millis() > 500;
+                            }
+                            false
+                        })
+                    {
+                        let cursor_vertices = cursor.vertices(false, self.size);
                         vertices.extend_from_slice(&cursor_vertices);
                         indices.extend_from_slice(&text_field.get_cursor().indices(num_vertices));
                         num_vertices += cursor_vertices.len() as u16;
-                        num_indices += text_field.get_cursor().num_indices();
+                        num_indices += cursor.num_indices();
+                        text_field.set_last_cursor_blink();
                     }
 
                     text_areas.push(
