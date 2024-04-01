@@ -21,8 +21,16 @@ pub struct TextField {
     active: bool,
 }
 
+const PADDING: u32 = 10;
+
 impl TextField {
     pub fn new(cfg: TextFieldConfig, font_system: &mut glyphon::FontSystem) -> Self {
+        let padded_rect = RectPos {
+            top: cfg.rect_pos.top + PADDING,
+            left: cfg.rect_pos.left + PADDING,
+            right: cfg.rect_pos.right - PADDING,
+            bottom: cfg.rect_pos.bottom - PADDING,
+        };
         Self {
             rectangle: Rectangle::new(
                 cfg.rect_pos,
@@ -31,13 +39,7 @@ impl TextField {
                 cfg.border_color,
                 cfg.border_color_active,
             ),
-            text: Text::new(
-                font_system,
-                cfg.rect_pos,
-                "",
-                cfg.text_color,
-                cfg.text_color,
-            ),
+            text: Text::new(font_system, padded_rect, "", cfg.text_color, cfg.text_color),
             content: String::new(),
             active: false,
         }

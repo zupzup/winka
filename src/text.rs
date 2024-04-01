@@ -9,6 +9,9 @@ pub struct Text {
     color_active: Color,
 }
 
+const FONT_SIZE: f32 = 30.0;
+const LINE_HEIGHT: f32 = 42.0;
+
 impl Text {
     pub fn new(
         font_system: &mut FontSystem,
@@ -17,7 +20,7 @@ impl Text {
         color: Color,
         color_active: Color,
     ) -> Self {
-        let mut buffer = Buffer::new(font_system, Metrics::new(30.0, 42.0));
+        let mut buffer = Buffer::new(font_system, Metrics::new(FONT_SIZE, LINE_HEIGHT));
         buffer.set_size(
             font_system,
             (rect_pos.right - rect_pos.left) as f32,
