@@ -94,7 +94,9 @@ impl TextField {
 
     pub fn set_active(&mut self) {
         self.active = true;
-        self.last_cursor_blink = Some(SystemTime::now());
+        if self.last_cursor_blink.is_none() {
+            self.last_cursor_blink = Some(SystemTime::now());
+        }
     }
 
     pub fn set_inactive(&mut self) {

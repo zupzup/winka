@@ -428,12 +428,11 @@ impl<'window> State<'window> {
                     num_indices += text_field.rectangle().num_indices();
 
                     let now = SystemTime::now();
+                    // TODO clean up blinking logic
                     if text_field_active
-                        && text_field.get_last_cursor_blink().is_some_and(|x| {
-                            if let Ok(duration) = x.duration_since(now) {
-                                return duration.as_millis() > 500;
-                            }
-                            false
+                        && text_field.get_last_cursor_blink().is_some_and(|dur| {
+                            now.duration_since(dur)
+                                .is_ok_and(|duration| duration.as_millis() > 500)
                         })
                     {
                         let cursor_vertices = cursor.vertices(false, self.size);
@@ -441,7 +440,12 @@ impl<'window> State<'window> {
                         indices.extend_from_slice(&text_field.get_cursor().indices(num_vertices));
                         num_vertices += cursor_vertices.len() as u16;
                         num_indices += cursor.num_indices();
-                        text_field.set_last_cursor_blink();
+                        if text_field.get_last_cursor_blink().is_some_and(|dur| {
+                            now.duration_since(dur)
+                                .is_ok_and(|duration| duration.as_millis() > 1000)
+                        }) {
+                            text_field.set_last_cursor_blink();
+                        }
                     }
 
                     text_areas.push(
