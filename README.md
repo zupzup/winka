@@ -23,8 +23,6 @@
 
 ## TODO
 
-* check double check of enum in godbolt
-* don't use booleans, use enum types as arguments, or Option
 * Create a separate text input field
     * if it's active and text is input, it shows in the text field
     * Create a blinking cursor within it
@@ -32,6 +30,4 @@
         * https://github.com/emilk/egui/blob/master/crates/epaint/src/text/cursor.rs
 * Create "success" notification on clicking submit with the entered text
 * Refactor fontsystem to use global (once cell, arc, lock)
-* only load 1 custom font
-    * https://github.com/iced-rs/iced/blob/3013463baa71504488a20436beb3db87ecb66df0/graphics/src/text.rs
-
+* refactor to not use booleans as fields and arguments, use enum types as arguments, or Option
