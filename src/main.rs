@@ -371,8 +371,8 @@ impl<'window> State<'window> {
                                 }
                                 Key::Named(NamedKey::Escape) => elwt.exit(),
                                 _ => {
-                                    if let Some(txt) = event.text_with_all_modifiers() {
-                                        text_field.add_text(&mut self.font_system, txt);
+                                    if let Some(ref txt) = event.text {
+                                        text_field.add_text(&mut self.font_system, txt.as_str());
                                     }
                                 }
                             }
