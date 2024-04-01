@@ -45,9 +45,16 @@ impl TextField {
         }
     }
 
-    pub fn set_text(&mut self, font_system: &mut FontSystem, text: &str) {
+    pub fn add_text(&mut self, font_system: &mut FontSystem, text: &str) {
         if self.active {
-            self.content = text.to_owned();
+            self.content.push_str(text);
+            self.text.set_text(font_system, &self.content);
+        }
+    }
+
+    pub fn remove_character(&mut self, font_system: &mut FontSystem) {
+        if self.active {
+            self.content.pop();
             self.text.set_text(font_system, &self.content);
         }
     }

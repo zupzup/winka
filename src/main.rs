@@ -365,18 +365,26 @@ impl<'window> State<'window> {
                         _ => None,
                     })
                     .collect();
-                match event.key_without_modifiers().as_ref() {
-                    Key::Character(character) => {
-                        active_text_fields.iter_mut().for_each(|text_field| {
-                            text_field.set_text(&mut self.font_system, character);
-                            // TODO: append text
-                        });
+                if event.state == ElementState::Pressed {
+                    match event.key_without_modifiers().as_ref() {
+                        Key::Character(character) => {
+                            active_text_fields.iter_mut().for_each(|text_field| {
+                                text_field.add_text(&mut self.font_system, character);
+                            });
+                        }
+                        Key::Named(NamedKey::Escape) => elwt.exit(),
+                        Key::Named(NamedKey::Backspace) => {
+                            active_text_fields.iter_mut().for_each(|text_field| {
+                                text_field.remove_character(&mut self.font_system);
+                            });
+                        }
+                        Key::Named(NamedKey::Space) => {
+                            active_text_fields.iter_mut().for_each(|text_field| {
+                                text_field.add_text(&mut self.font_system, " ");
+                            });
+                        }
+                        _ => (),
                     }
-                    Key::Named(NamedKey::Escape) => elwt.exit(),
-                    Key::Named(NamedKey::Space) => {
-                        // TODO: implement handler
-                    }
-                    _ => (),
                 }
                 true
             }
