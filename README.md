@@ -23,6 +23,8 @@
 
 ## TODO
 
+* check double check of enum in godbolt
+* don't use booleans, use enum types as arguments, or Option
 * Create a separate text input field
     * if it's active and text is input, it shows in the text field
     * Create a blinking cursor within it
