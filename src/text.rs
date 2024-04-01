@@ -2,6 +2,12 @@ use crate::rectangle::RectPos;
 use glyphon::{Attrs, Buffer, Color, Family, FontSystem, Metrics, Shaping, TextArea, TextBounds};
 
 #[derive(Debug)]
+pub struct TextSize {
+    pub width: f32,
+    pub height: f32,
+}
+
+#[derive(Debug)]
 pub struct Text {
     buffer: Buffer,
     rect_pos: RectPos,
@@ -41,6 +47,16 @@ impl Text {
             rect_pos,
             color,
             color_active,
+        }
+    }
+
+    pub fn get_size(&self) -> TextSize {
+        TextSize {
+            width: self
+                .buffer
+                .layout_runs()
+                .fold(0.0, |width, run| run.line_w.max(width)),
+            height: LINE_HEIGHT,
         }
     }
 

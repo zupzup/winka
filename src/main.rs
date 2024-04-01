@@ -422,6 +422,7 @@ impl<'window> State<'window> {
                     num_vertices += text_field_vertices.len() as u16;
                     num_indices += text_field.rectangle().num_indices();
 
+                    println!("text size: {:?}", text_field.text().get_size());
                     text_areas.push(
                         text_field
                             .text()
