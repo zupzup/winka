@@ -351,8 +351,7 @@ impl<'window> State<'window> {
                 }
             },
             WindowEvent::KeyboardInput { event, .. } => {
-                let mut active_text_fields: Vec<&mut text_field::TextField> = self
-                    .components
+                self.components
                     .iter_mut()
                     .filter_map(|component| match component {
                         Component::TextField(text_field) => {
@@ -364,28 +363,21 @@ impl<'window> State<'window> {
                         }
                         _ => None,
                     })
-                    .collect();
-                if event.state == ElementState::Pressed {
-                    match event.key_without_modifiers().as_ref() {
-                        Key::Character(character) => {
-                            active_text_fields.iter_mut().for_each(|text_field| {
-                                text_field.add_text(&mut self.font_system, character);
-                            });
+                    .for_each(|text_field| {
+                        if event.state == ElementState::Pressed {
+                            match event.key_without_modifiers().as_ref() {
+                                Key::Named(NamedKey::Backspace) => {
+                                    text_field.remove_character(&mut self.font_system);
+                                }
+                                Key::Named(NamedKey::Escape) => elwt.exit(),
+                                _ => {
+                                    if let Some(txt) = event.text_with_all_modifiers() {
+                                        text_field.add_text(&mut self.font_system, txt);
+                                    }
+                                }
+                            }
                         }
-                        Key::Named(NamedKey::Escape) => elwt.exit(),
-                        Key::Named(NamedKey::Backspace) => {
-                            active_text_fields.iter_mut().for_each(|text_field| {
-                                text_field.remove_character(&mut self.font_system);
-                            });
-                        }
-                        Key::Named(NamedKey::Space) => {
-                            active_text_fields.iter_mut().for_each(|text_field| {
-                                text_field.add_text(&mut self.font_system, " ");
-                            });
-                        }
-                        _ => (),
-                    }
-                }
+                    });
                 true
             }
             _ => false,
