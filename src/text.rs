@@ -2,9 +2,9 @@ use crate::rectangle::RectPos;
 use glyphon::{Attrs, Buffer, Color, Family, FontSystem, Metrics, Shaping, TextArea, TextBounds};
 
 #[derive(Debug)]
-pub struct TextSize {
+pub struct TextWidth {
     pub width: f32,
-    pub height: f32,
+    pub buffer_width: f32,
 }
 
 #[derive(Debug)]
@@ -41,6 +41,7 @@ impl Text {
         buffer.lines.iter_mut().for_each(|line| {
             line.set_align(Some(glyphon::cosmic_text::Align::Center));
         });
+        buffer.set_wrap(font_system, glyphon::Wrap::None);
         buffer.shape_until_scroll(font_system);
         Self {
             buffer,
@@ -50,13 +51,13 @@ impl Text {
         }
     }
 
-    pub fn get_size(&self) -> TextSize {
-        TextSize {
+    pub fn get_text_width(&self) -> TextWidth {
+        TextWidth {
             width: self
                 .buffer
                 .layout_runs()
                 .fold(0.0, |width, run| run.line_w.max(width)),
-            height: LINE_HEIGHT,
+            buffer_width: self.buffer.size().0,
         }
     }
 
@@ -84,9 +85,19 @@ impl Text {
     }
 
     pub fn text_area(&self, is_active: bool) -> TextArea {
+        let text_width = self.get_text_width();
+        let width = text_width.width;
+        let buffer_width = text_width.buffer_width;
+
+        let text_overlap = if width > buffer_width {
+            width - buffer_width
+        } else {
+            0.0
+        };
+
         TextArea {
             buffer: &self.buffer,
-            left: self.rect_pos.left as f32,
+            left: self.rect_pos.left as f32 - text_overlap,
             top: self.top(),
             scale: 1.0,
             bounds: self.bounds(),

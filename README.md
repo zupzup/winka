@@ -23,8 +23,7 @@
 
 ## TODO
 
-* Create a separate text input field
-    * scroll field to the right on entering text
+* refactor to some pub fields etc., without accessors
 * refactor clean up blinking logic
 * Create "success" notification on clicking submit with the entered text
 * Refactor fontsystem to use global (once cell, arc, lock)

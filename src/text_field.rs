@@ -57,9 +57,13 @@ impl TextField {
     }
 
     pub fn get_cursor(&self) -> Rectangle {
-        let size = self.text.get_size();
+        let text_width = self.text.get_text_width();
         let rect_pos = self.rectangle().position();
-        let left = rect_pos.left + size.width as u32 + 12;
+        let left = if text_width.width > text_width.buffer_width {
+            rect_pos.right - 10
+        } else {
+            rect_pos.left + text_width.width as u32 + 10
+        };
         Rectangle::new(
             RectPos {
                 top: rect_pos.top + 10,
