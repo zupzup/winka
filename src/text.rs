@@ -86,8 +86,10 @@ impl Text {
 
     pub fn text_area(&self, is_active: bool) -> TextArea {
         let text_width = self.get_text_width();
-        let width = text_width.width;
-        let buffer_width = text_width.buffer_width;
+        let TextWidth {
+            width,
+            buffer_width,
+        } = text_width;
 
         let text_overlap = if width > buffer_width {
             width - buffer_width
