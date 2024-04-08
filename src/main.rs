@@ -186,10 +186,10 @@ impl<'window> State<'window> {
         let button = button::Button::new(
             button::ButtonConfig {
                 rect_pos: RectPos {
-                    top: 100,
+                    top: 125,
                     left: 100,
-                    bottom: 400,
-                    right: 500,
+                    bottom: 225,
+                    right: 400,
                 },
                 fill_color: [0.5, 0.0, 0.5],
                 fill_color_active: [1.0, 0.0, 1.0],
@@ -198,49 +198,9 @@ impl<'window> State<'window> {
                 text: "Submit 🚀",
                 text_color: Color::rgb(200, 200, 200),
                 text_color_active: Color::rgb(255, 255, 255),
-                on_click: || {
+                on_click: move || {
                     println!("button 1 clicked");
                 },
-            },
-            &mut font_system,
-        );
-
-        let button2 = button::Button::new(
-            button::ButtonConfig {
-                rect_pos: RectPos {
-                    top: 600,
-                    left: 600,
-                    bottom: 700,
-                    right: 800,
-                },
-                fill_color: [0.3, 0.0, 0.3],
-                fill_color_active: [0.8, 0.0, 0.8],
-                border_color: [0.3, 0.3, 0.3],
-                border_color_active: [0.1, 0.1, 0.1],
-                text: "Button! 🚀",
-                text_color: Color::rgb(200, 200, 200),
-                text_color_active: Color::rgb(255, 255, 255),
-                on_click: || {},
-            },
-            &mut font_system,
-        );
-
-        let button3 = button::Button::new(
-            button::ButtonConfig {
-                rect_pos: RectPos {
-                    top: 300,
-                    left: 900,
-                    bottom: 400,
-                    right: 1000,
-                },
-                fill_color: [0.3, 0.0, 0.3],
-                fill_color_active: [0.8, 0.0, 0.8],
-                border_color: [0.3, 0.3, 0.3],
-                border_color_active: [0.1, 0.1, 0.1],
-                text: "3!",
-                text_color: Color::rgb(200, 200, 200),
-                text_color_active: Color::rgb(255, 255, 255),
-                on_click: || {},
             },
             &mut font_system,
         );
@@ -248,10 +208,10 @@ impl<'window> State<'window> {
         let text_field = text_field::TextField::new(
             text_field::TextFieldConfig {
                 rect_pos: RectPos {
-                    top: 10,
-                    left: 10,
-                    bottom: 90,
-                    right: 200,
+                    top: 50,
+                    left: 100,
+                    bottom: 120,
+                    right: 400,
                 },
                 fill_color: [0.9, 0.9, 0.9],
                 fill_color_active: [1.0, 1.0, 1.0],
@@ -262,12 +222,7 @@ impl<'window> State<'window> {
             &mut font_system,
         );
 
-        let components = vec![
-            Component::Button(button),
-            Component::Button(button2),
-            Component::Button(button3),
-            Component::TextField(text_field),
-        ];
+        let components = vec![Component::Button(button), Component::TextField(text_field)];
 
         Self {
             window,
