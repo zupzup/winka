@@ -206,7 +206,7 @@ impl<'window> State<'window> {
                 fill_color: [0.5, 0.0, 0.5],
                 fill_color_active: [1.0, 0.0, 1.0],
                 border_color: [0.0, 0.0, 0.0],
-                border_color_active: [1.0, 1.0, 1.0],
+                border_color_active: [0.5, 0.5, 0.5],
                 text: "Submit 🚀",
                 text_color: Color::rgb(200, 200, 200),
                 text_color_active: Color::rgb(255, 255, 255),
@@ -565,8 +565,8 @@ async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
                                 right: 400,
                             },
                             &format!("Success: {}!", text_field.content()),
-                            Color::rgb(0, 255, 0),
-                            Color::rgb(0, 255, 0),
+                            Color::rgb(0, 200, 0),
+                            Color::rgb(0, 200, 0),
                         ),
                     ));
                 }
