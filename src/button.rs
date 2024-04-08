@@ -2,7 +2,6 @@ use crate::rectangle::{RectPos, Rectangle};
 use crate::text::Text;
 use winit::dpi::PhysicalPosition;
 
-#[derive(Debug)]
 pub struct ButtonConfig {
     pub rect_pos: RectPos,
     pub fill_color: [f32; 3],
@@ -12,14 +11,13 @@ pub struct ButtonConfig {
     pub text: &'static str,
     pub text_color: glyphon::Color,
     pub text_color_active: glyphon::Color,
-    pub on_click: fn(),
+    pub on_click: Box<dyn Fn()>,
 }
 
-#[derive(Debug)]
 pub struct Button {
     text: Text,
     rectangle: Rectangle,
-    on_click: fn(),
+    on_click: Box<dyn Fn()>,
 }
 
 impl Button {

@@ -4,8 +4,12 @@ use std::time::SystemTime;
 use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
-    event::{ElementState, Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
+    event::{
+        ElementState,
+        Event::{self, UserEvent},
+        WindowEvent,
+    },
+    event_loop::{ControlFlow, EventLoop, EventLoopBuilder, EventLoopProxy, EventLoopWindowTarget},
     keyboard::{Key, NamedKey},
     platform::modifier_supplement::KeyEventExtModifierSupplement,
     window::{Window, WindowBuilder},
@@ -25,9 +29,12 @@ pub struct Vertex {
     border_color: [f32; 3],
 }
 
+pub struct Id(usize);
+
 pub enum Component {
-    Button(button::Button),
-    TextField(text_field::TextField),
+    Button(Id, button::Button),
+    TextField(Id, text_field::TextField),
+    Text(Id, text::Text),
 }
 
 impl Vertex {
@@ -66,6 +73,10 @@ struct InputState {
     mouse_coords: PhysicalPosition<f64>,
 }
 
+enum GUIEvent {
+    SuccessEvent(Id),
+}
+
 struct State<'window> {
     surface: wgpu::Surface<'window>,
     device: wgpu::Device,
@@ -83,7 +94,7 @@ struct State<'window> {
 }
 
 impl<'window> State<'window> {
-    async fn new(window: Window) -> State<'window> {
+    async fn new(window: Window, event_loop_proxy: EventLoopProxy<GUIEvent>) -> State<'window> {
         let size = window.inner_size();
         let mouse_coords = PhysicalPosition { x: 0.0, y: 0.0 };
         let input_state = InputState {
@@ -183,6 +194,7 @@ impl<'window> State<'window> {
             multiview: None,
         });
 
+        let events_proxy_clone = event_loop_proxy.clone();
         let button = button::Button::new(
             button::ButtonConfig {
                 rect_pos: RectPos {
@@ -198,9 +210,9 @@ impl<'window> State<'window> {
                 text: "Submit 🚀",
                 text_color: Color::rgb(200, 200, 200),
                 text_color_active: Color::rgb(255, 255, 255),
-                on_click: move || {
-                    println!("button 1 clicked");
-                },
+                on_click: Box::new(move || {
+                    let _ = events_proxy_clone.send_event(GUIEvent::SuccessEvent(Id(1)));
+                }),
             },
             &mut font_system,
         );
@@ -222,7 +234,10 @@ impl<'window> State<'window> {
             &mut font_system,
         );
 
-        let components = vec![Component::Button(button), Component::TextField(text_field)];
+        let components = vec![
+            Component::Button(Id(0), button),
+            Component::TextField(Id(1), text_field),
+        ];
 
         Self {
             window,
@@ -258,22 +273,23 @@ impl<'window> State<'window> {
         self.components
             .iter_mut()
             .for_each(|component| match component {
-                Component::Button(button) => {
+                Component::Button(_id, button) => {
                     if button.is_hovered(self.input_state.mouse_coords) {
                         button.click();
                     }
                 }
-                Component::TextField(text_field) => {
+                Component::TextField(_id, text_field) => {
                     if text_field.is_hovered(self.input_state.mouse_coords) {
                         text_field.set_active();
                     } else {
                         text_field.set_inactive();
                     }
                 }
+                _ => (),
             });
     }
 
-    fn input(&mut self, event: &WindowEvent, elwt: &EventLoopWindowTarget<()>) -> bool {
+    fn input(&mut self, event: &WindowEvent, elwt: &EventLoopWindowTarget<GUIEvent>) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 self.input_state.mouse_coords = position.to_owned();
@@ -313,7 +329,7 @@ impl<'window> State<'window> {
                 self.components
                     .iter_mut()
                     .filter_map(|component| match component {
-                        Component::TextField(text_field) => {
+                        Component::TextField(_id, text_field) => {
                             if text_field.is_active() {
                                 Some(text_field)
                             } else {
@@ -353,7 +369,7 @@ impl<'window> State<'window> {
         self.components
             .iter_mut()
             .for_each(|component| match component {
-                Component::Button(button) => {
+                Component::Button(_id, button) => {
                     let button_active = button.is_hovered(self.input_state.mouse_coords);
                     let button_vertices = button.rectangle().vertices(button_active, self.size);
 
@@ -369,7 +385,7 @@ impl<'window> State<'window> {
                             .text_area(button_active && self.input_state.clicked),
                     );
                 }
-                Component::TextField(text_field) => {
+                Component::TextField(_id, text_field) => {
                     let text_field_active = text_field.is_active();
                     let text_field_vertices = text_field
                         .rectangle_mut()
@@ -409,6 +425,7 @@ impl<'window> State<'window> {
                             .text_area(text_field_active && self.input_state.clicked),
                     );
                 }
+                Component::Text(_id, text) => text_areas.push(text.text_area(false)),
             });
 
         let vertex_buffer = self
@@ -493,13 +510,15 @@ impl<'window> State<'window> {
 
 fn main() {
     env_logger::init();
-    let event_loop = EventLoop::new().expect("can create an event lopp");
+    let event_loop = EventLoopBuilder::<GUIEvent>::with_user_event()
+        .build()
+        .unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
     pollster::block_on(run(event_loop, window));
 }
 
-async fn run(event_loop: EventLoop<()>, window: Window) {
-    let mut state = State::new(window).await;
+async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
+    let mut state = State::new(window, event_loop.create_proxy()).await;
 
     event_loop.set_control_flow(ControlFlow::Poll);
     event_loop.set_control_flow(ControlFlow::Wait);
@@ -510,6 +529,48 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
     event_loop
         .run(move |event, elwt| match event {
+            UserEvent(ev) => {
+                if let Some(idx) = state
+                    .components
+                    .iter()
+                    .position(|c| matches!(c, Component::Text(Id(id), _) if *id == 2))
+                {
+                    state.components.swap_remove(idx);
+                }
+
+                let comp = match ev {
+                    GUIEvent::SuccessEvent(Id(target_id)) => state
+                        .components
+                        .iter()
+                        .filter_map(|component| match component {
+                            Component::TextField(Id(id), text_field)
+                                if *id == target_id && !text_field.content().is_empty() =>
+                            {
+                                Some(text_field)
+                            }
+                            _ => None,
+                        })
+                        .next(),
+                };
+
+                if let Some(text_field) = comp {
+                    state.components.push(Component::Text(
+                        Id(2),
+                        text::Text::new(
+                            &mut state.font_system,
+                            RectPos {
+                                top: 250,
+                                left: 100,
+                                bottom: 400,
+                                right: 400,
+                            },
+                            &format!("Success: {}!", text_field.content()),
+                            Color::rgb(0, 255, 0),
+                            Color::rgb(0, 255, 0),
+                        ),
+                    ));
+                }
+            }
             Event::WindowEvent { window_id, event }
                 if window_id == state.window().id() && !state.input(&event, elwt) =>
             {
