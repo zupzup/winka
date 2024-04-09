@@ -24,6 +24,7 @@ pub struct TextField {
 }
 
 const PADDING: u32 = 10;
+const CURSOR_WIDTH: u32 = 2;
 
 impl TextField {
     pub fn new(cfg: TextFieldConfig, font_system: &mut glyphon::FontSystem) -> Self {
@@ -60,16 +61,16 @@ impl TextField {
         let text_width = self.text.get_text_width();
         let rect_pos = self.rectangle.position;
         let left = if text_width.width > text_width.buffer_width {
-            rect_pos.right - 10
+            rect_pos.right - PADDING
         } else {
-            rect_pos.left + text_width.width as u32 + 10
+            rect_pos.left + text_width.width as u32 + PADDING
         };
         Rectangle::new(
             RectPos {
-                top: rect_pos.top + 10,
+                top: rect_pos.top + PADDING,
                 left,
-                right: left + 2,
-                bottom: rect_pos.bottom - 10,
+                right: left + CURSOR_WIDTH,
+                bottom: rect_pos.bottom - PADDING,
             },
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],

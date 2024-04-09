@@ -51,9 +51,9 @@ impl Rectangle {
             self.position.bottom as f32,
             self.position.right as f32,
         ];
+
         let mut color = self.color;
         let mut border_color = self.border_color;
-
         if is_active {
             color = self.color_active;
             border_color = self.border_color_active;

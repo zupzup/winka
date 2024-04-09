@@ -6,7 +6,6 @@ Simply run `RUST_LOG=info cargo run` to run the application and a simple GUI wil
 
 ## TODO
 
-* refactor to some pub fields etc., without accessors
 * refactor clean up blinking logic
 * refactor to not use booleans as fields and arguments, use enum types as arguments, or Option
 * Refactor fontsystem to use global (once cell, arc, lock)

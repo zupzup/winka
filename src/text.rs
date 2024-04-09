@@ -27,22 +27,28 @@ impl Text {
         color_active: Color,
     ) -> Self {
         let mut buffer = Buffer::new(font_system, Metrics::new(FONT_SIZE, LINE_HEIGHT));
+
         buffer.set_size(
             font_system,
             (rect_pos.right - rect_pos.left) as f32,
             (rect_pos.bottom - rect_pos.top) as f32,
         );
+
         buffer.set_text(
             font_system,
             text,
             Attrs::new().family(Family::SansSerif),
             Shaping::Advanced,
         );
+
         buffer.lines.iter_mut().for_each(|line| {
             line.set_align(Some(glyphon::cosmic_text::Align::Center));
         });
+
         buffer.set_wrap(font_system, glyphon::Wrap::None);
+
         buffer.shape_until_scroll(font_system);
+
         Self {
             buffer,
             rect_pos,

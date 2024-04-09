@@ -389,7 +389,6 @@ impl<'window> State<'window> {
                     let text_field_active = text_field.active;
                     let text_field_vertices =
                         text_field.rectangle.vertices(text_field_active, self.size);
-                    let mut cursor = text_field.get_cursor();
 
                     vertices.extend_from_slice(&text_field_vertices);
                     indices.extend_from_slice(&text_field.rectangle.indices(num_vertices));
@@ -398,13 +397,13 @@ impl<'window> State<'window> {
                     num_indices += text_field.rectangle.num_indices();
 
                     let now = SystemTime::now();
-                    // TODO clean up blinking logic
                     if text_field_active
                         && text_field.get_last_cursor_blink().is_some_and(|dur| {
                             now.duration_since(dur)
                                 .is_ok_and(|duration| duration.as_millis() > 500)
                         })
                     {
+                        let mut cursor = text_field.get_cursor();
                         let cursor_vertices = cursor.vertices(false, self.size);
                         vertices.extend_from_slice(&cursor_vertices);
                         indices.extend_from_slice(&text_field.get_cursor().indices(num_vertices));
