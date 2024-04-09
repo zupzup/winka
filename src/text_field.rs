@@ -58,7 +58,7 @@ impl TextField {
 
     pub fn get_cursor(&self) -> Rectangle {
         let text_width = self.text.get_text_width();
-        let rect_pos = self.rectangle.position();
+        let rect_pos = self.rectangle.position;
         let left = if text_width.width > text_width.buffer_width {
             rect_pos.right - 10
         } else {

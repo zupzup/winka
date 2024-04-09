@@ -11,7 +11,7 @@ pub struct RectPos {
 
 #[derive(Debug, Clone)]
 pub struct Rectangle {
-    position: RectPos,
+    pub position: RectPos,
     color: [f32; 3],
     color_active: [f32; 3],
     border_color: [f32; 3],
@@ -33,10 +33,6 @@ impl Rectangle {
             border_color_active,
             position,
         }
-    }
-
-    pub fn position(&self) -> RectPos {
-        self.position
     }
 
     pub fn vertices(

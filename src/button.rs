@@ -15,8 +15,8 @@ pub struct ButtonConfig {
 }
 
 pub struct Button {
-    text: Text,
-    rectangle: Rectangle,
+    pub text: Text,
+    pub rectangle: Rectangle,
     on_click: Box<dyn Fn()>,
 }
 
@@ -39,14 +39,6 @@ impl Button {
             ),
             on_click: cfg.on_click,
         }
-    }
-
-    pub fn text(&self) -> &Text {
-        &self.text
-    }
-
-    pub fn rectangle(&mut self) -> &mut Rectangle {
-        &mut self.rectangle
     }
 
     pub fn click(&mut self) {

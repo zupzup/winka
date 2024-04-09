@@ -371,17 +371,17 @@ impl<'window> State<'window> {
             .for_each(|component| match component {
                 Component::Button(_id, button) => {
                     let button_active = button.is_hovered(self.input_state.mouse_coords);
-                    let button_vertices = button.rectangle().vertices(button_active, self.size);
+                    let button_vertices = button.rectangle.vertices(button_active, self.size);
 
                     vertices.extend_from_slice(&button_vertices);
-                    indices.extend_from_slice(&button.rectangle().indices(num_vertices));
+                    indices.extend_from_slice(&button.rectangle.indices(num_vertices));
 
                     num_vertices += button_vertices.len() as u16;
-                    num_indices += button.rectangle().num_indices();
+                    num_indices += button.rectangle.num_indices();
 
                     text_areas.push(
                         button
-                            .text()
+                            .text
                             .text_area(button_active && self.input_state.clicked),
                     );
                 }
