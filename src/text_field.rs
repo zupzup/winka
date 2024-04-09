@@ -2,7 +2,6 @@ use crate::rectangle::{RectPos, Rectangle};
 use crate::text::Text;
 use glyphon::FontSystem;
 use std::time::SystemTime;
-use winit::dpi::PhysicalPosition;
 
 #[derive(Debug)]
 pub struct TextFieldConfig {
@@ -23,6 +22,7 @@ pub struct TextField {
     pub last_cursor_blink: Option<SystemTime>,
 }
 
+pub const CURSOR_BLINK_TIMEOUT_MS: u128 = 500;
 const PADDING: u32 = 10;
 const CURSOR_WIDTH: u32 = 2;
 
@@ -47,14 +47,6 @@ impl TextField {
             active: false,
             last_cursor_blink: None,
         }
-    }
-
-    pub fn get_last_cursor_blink(&self) -> &Option<SystemTime> {
-        &self.last_cursor_blink
-    }
-
-    pub fn set_last_cursor_blink(&mut self) {
-        self.last_cursor_blink = Some(SystemTime::now());
     }
 
     pub fn get_cursor(&self) -> Rectangle {
@@ -103,9 +95,5 @@ impl TextField {
     pub fn set_inactive(&mut self) {
         self.active = false;
         self.last_cursor_blink = None;
-    }
-
-    pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {
-        self.rectangle.is_hovered(mouse_coords)
     }
 }

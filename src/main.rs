@@ -274,12 +274,15 @@ impl<'window> State<'window> {
             .iter_mut()
             .for_each(|component| match component {
                 Component::Button(_id, button) => {
-                    if button.is_hovered(self.input_state.mouse_coords) {
+                    if button.rectangle.is_hovered(self.input_state.mouse_coords) {
                         button.click();
                     }
                 }
                 Component::TextField(_id, text_field) => {
-                    if text_field.is_hovered(self.input_state.mouse_coords) {
+                    if text_field
+                        .rectangle
+                        .is_hovered(self.input_state.mouse_coords)
+                    {
                         text_field.set_active();
                     } else {
                         text_field.set_inactive();
@@ -301,23 +304,12 @@ impl<'window> State<'window> {
                         self.input_state.clicked = true;
                         self.handle_click();
                     }
-                    log::info!(
-                        "{button:?} mouse button pressed at {:?}, clicked: {}",
-                        self.input_state.mouse_coords,
-                        self.input_state.clicked
-                    );
                     true
                 }
                 ElementState::Released => {
                     if button == &winit::event::MouseButton::Left && self.input_state.clicked {
                         self.input_state.clicked = false;
                     }
-                    log::info!(
-                        "{button:?} mouse button released at {:?}, size: {:?}, clicked: {}",
-                        self.input_state.mouse_coords,
-                        self.size,
-                        self.input_state.clicked
-                    );
                     true
                 }
             },
@@ -377,7 +369,7 @@ impl<'window> State<'window> {
                     indices.extend_from_slice(&button.rectangle.indices(num_vertices));
 
                     num_vertices += button_vertices.len() as u16;
-                    num_indices += button.rectangle.num_indices();
+                    num_indices += rectangle::NUM_INDICES;
 
                     text_areas.push(
                         button
@@ -394,26 +386,31 @@ impl<'window> State<'window> {
                     indices.extend_from_slice(&text_field.rectangle.indices(num_vertices));
 
                     num_vertices += text_field_vertices.len() as u16;
-                    num_indices += text_field.rectangle.num_indices();
+                    num_indices += rectangle::NUM_INDICES;
 
                     let now = SystemTime::now();
                     if text_field_active
-                        && text_field.get_last_cursor_blink().is_some_and(|dur| {
-                            now.duration_since(dur)
-                                .is_ok_and(|duration| duration.as_millis() > 500)
+                        && text_field.last_cursor_blink.is_some_and(|dur| {
+                            now.duration_since(dur).is_ok_and(|duration| {
+                                duration.as_millis() > text_field::CURSOR_BLINK_TIMEOUT_MS
+                            })
                         })
                     {
                         let mut cursor = text_field.get_cursor();
                         let cursor_vertices = cursor.vertices(false, self.size);
+
                         vertices.extend_from_slice(&cursor_vertices);
                         indices.extend_from_slice(&text_field.get_cursor().indices(num_vertices));
+
                         num_vertices += cursor_vertices.len() as u16;
-                        num_indices += cursor.num_indices();
-                        if text_field.get_last_cursor_blink().is_some_and(|dur| {
-                            now.duration_since(dur)
-                                .is_ok_and(|duration| duration.as_millis() > 1000)
+                        num_indices += rectangle::NUM_INDICES;
+
+                        if text_field.last_cursor_blink.is_some_and(|dur| {
+                            now.duration_since(dur).is_ok_and(|duration| {
+                                duration.as_millis() > text_field::CURSOR_BLINK_TIMEOUT_MS * 2
+                            })
                         }) {
-                            text_field.set_last_cursor_blink();
+                            text_field.last_cursor_blink = Some(SystemTime::now());
                         }
                     }
 
@@ -515,6 +512,49 @@ fn main() {
     pollster::block_on(run(event_loop, window));
 }
 
+fn handle_success_event(state: &mut State, ev: &GUIEvent) {
+    if let Some(idx) = state
+        .components
+        .iter()
+        .position(|c| matches!(c, Component::Text(Id(id), _) if *id == 2))
+    {
+        state.components.swap_remove(idx);
+    }
+
+    let comp = match ev {
+        GUIEvent::SuccessEvent(Id(target_id)) => state
+            .components
+            .iter()
+            .filter_map(|component| match component {
+                Component::TextField(Id(id), text_field)
+                    if id == target_id && !text_field.content.is_empty() =>
+                {
+                    Some(text_field)
+                }
+                _ => None,
+            })
+            .next(),
+    };
+
+    if let Some(text_field) = comp {
+        state.components.push(Component::Text(
+            Id(2),
+            text::Text::new(
+                &mut state.font_system,
+                RectPos {
+                    top: 250,
+                    left: 100,
+                    bottom: 400,
+                    right: 400,
+                },
+                &format!("Success: {}!", text_field.content),
+                Color::rgb(0, 200, 0),
+                Color::rgb(0, 200, 0),
+            ),
+        ));
+    }
+}
+
 async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
     let mut state = State::new(window, event_loop.create_proxy()).await;
 
@@ -527,48 +567,7 @@ async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
 
     event_loop
         .run(move |event, elwt| match event {
-            UserEvent(ev) => {
-                if let Some(idx) = state
-                    .components
-                    .iter()
-                    .position(|c| matches!(c, Component::Text(Id(id), _) if *id == 2))
-                {
-                    state.components.swap_remove(idx);
-                }
-
-                let comp = match ev {
-                    GUIEvent::SuccessEvent(Id(target_id)) => state
-                        .components
-                        .iter()
-                        .filter_map(|component| match component {
-                            Component::TextField(Id(id), text_field)
-                                if *id == target_id && !text_field.content.is_empty() =>
-                            {
-                                Some(text_field)
-                            }
-                            _ => None,
-                        })
-                        .next(),
-                };
-
-                if let Some(text_field) = comp {
-                    state.components.push(Component::Text(
-                        Id(2),
-                        text::Text::new(
-                            &mut state.font_system,
-                            RectPos {
-                                top: 250,
-                                left: 100,
-                                bottom: 400,
-                                right: 400,
-                            },
-                            &format!("Success: {}!", text_field.content),
-                            Color::rgb(0, 200, 0),
-                            Color::rgb(0, 200, 0),
-                        ),
-                    ));
-                }
-            }
+            UserEvent(ev) => handle_success_event(&mut state, &ev),
             Event::WindowEvent { window_id, event }
                 if window_id == state.window().id() && !state.input(&event, elwt) =>
             {
@@ -587,9 +586,7 @@ async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
 
                         fps += 1;
                         if now.duration_since(then).unwrap().as_millis() > 1000 {
-                            state
-                                .window()
-                                .set_title(&format!("wgpu-text: 'simple' example, FPS: {}", fps));
+                            state.window().set_title(&format!("FPS: {}", fps));
                             fps = 0;
                             then = now;
                         }

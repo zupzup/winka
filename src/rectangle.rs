@@ -18,6 +18,8 @@ pub struct Rectangle {
     border_color_active: [f32; 3],
 }
 
+pub const NUM_INDICES: u32 = 6;
+
 impl Rectangle {
     pub fn new(
         position: RectPos,
@@ -100,10 +102,6 @@ impl Rectangle {
 
     pub fn indices(&self, base: u16) -> [u16; 6] {
         [base, 1 + base, 2 + base, base, 2 + base, 3 + base]
-    }
-
-    pub fn num_indices(&self) -> u32 {
-        6
     }
 
     pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {

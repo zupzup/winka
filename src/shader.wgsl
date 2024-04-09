@@ -36,7 +36,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var left: f32 = in.rect[1];
     var bottom: f32 = in.rect[2];
     var right: f32 = in.rect[3];
-    var leftborder: f32 = left + border_width;
 
     if (
     ((in.clip_position.x > left && in.clip_position.x < (left + border_width))
