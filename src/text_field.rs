@@ -16,11 +16,11 @@ pub struct TextFieldConfig {
 
 #[derive(Debug)]
 pub struct TextField {
-    text: Text,
-    rectangle: Rectangle,
-    content: String,
-    active: bool,
-    last_cursor_blink: Option<SystemTime>,
+    pub text: Text,
+    pub rectangle: Rectangle,
+    pub content: String,
+    pub active: bool,
+    pub last_cursor_blink: Option<SystemTime>,
 }
 
 const PADDING: u32 = 10;
@@ -58,7 +58,7 @@ impl TextField {
 
     pub fn get_cursor(&self) -> Rectangle {
         let text_width = self.text.get_text_width();
-        let rect_pos = self.rectangle().position();
+        let rect_pos = self.rectangle.position();
         let left = if text_width.width > text_width.buffer_width {
             rect_pos.right - 10
         } else {
@@ -92,10 +92,6 @@ impl TextField {
         }
     }
 
-    pub fn is_active(&self) -> bool {
-        self.active
-    }
-
     pub fn set_active(&mut self) {
         self.active = true;
         if self.last_cursor_blink.is_none() {
@@ -106,22 +102,6 @@ impl TextField {
     pub fn set_inactive(&mut self) {
         self.active = false;
         self.last_cursor_blink = None;
-    }
-
-    pub fn text(&self) -> &Text {
-        &self.text
-    }
-
-    pub fn rectangle(&self) -> &Rectangle {
-        &self.rectangle
-    }
-
-    pub fn rectangle_mut(&mut self) -> &mut Rectangle {
-        &mut self.rectangle
-    }
-
-    pub fn content(&self) -> &str {
-        &self.content
     }
 
     pub fn is_hovered(&self, mouse_coords: PhysicalPosition<f64>) -> bool {

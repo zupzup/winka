@@ -330,7 +330,7 @@ impl<'window> State<'window> {
                     .iter_mut()
                     .filter_map(|component| match component {
                         Component::TextField(_id, text_field) => {
-                            if text_field.is_active() {
+                            if text_field.active {
                                 Some(text_field)
                             } else {
                                 None
@@ -386,17 +386,16 @@ impl<'window> State<'window> {
                     );
                 }
                 Component::TextField(_id, text_field) => {
-                    let text_field_active = text_field.is_active();
-                    let text_field_vertices = text_field
-                        .rectangle_mut()
-                        .vertices(text_field_active, self.size);
+                    let text_field_active = text_field.active;
+                    let text_field_vertices =
+                        text_field.rectangle.vertices(text_field_active, self.size);
                     let mut cursor = text_field.get_cursor();
 
                     vertices.extend_from_slice(&text_field_vertices);
-                    indices.extend_from_slice(&text_field.rectangle().indices(num_vertices));
+                    indices.extend_from_slice(&text_field.rectangle.indices(num_vertices));
 
                     num_vertices += text_field_vertices.len() as u16;
-                    num_indices += text_field.rectangle().num_indices();
+                    num_indices += text_field.rectangle.num_indices();
 
                     let now = SystemTime::now();
                     // TODO clean up blinking logic
@@ -421,7 +420,7 @@ impl<'window> State<'window> {
 
                     text_areas.push(
                         text_field
-                            .text()
+                            .text
                             .text_area(text_field_active && self.input_state.clicked),
                     );
                 }
@@ -544,7 +543,7 @@ async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
                         .iter()
                         .filter_map(|component| match component {
                             Component::TextField(Id(id), text_field)
-                                if *id == target_id && !text_field.content().is_empty() =>
+                                if *id == target_id && !text_field.content.is_empty() =>
                             {
                                 Some(text_field)
                             }
@@ -564,7 +563,7 @@ async fn run(event_loop: EventLoop<GUIEvent>, window: Window) {
                                 bottom: 400,
                                 right: 400,
                             },
-                            &format!("Success: {}!", text_field.content()),
+                            &format!("Success: {}!", text_field.content),
                             Color::rgb(0, 200, 0),
                             Color::rgb(0, 200, 0),
                         ),
